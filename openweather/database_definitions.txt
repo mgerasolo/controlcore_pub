@@ -1,0 +1,154 @@
+openweather_historical=# \d hourly_data
+                                    Table "public.hourly_data"
+   Column    |     Type      | Collation | Nullable |                   Default
+-------------+---------------+-----------+----------+----------------------------------------------
+ id          | integer       |           | not null | nextval('openweather_data_id_seq'::regclass)
+ dt          | integer       |           | not null |
+ lat         | numeric(10,6) |           | not null |
+ lon         | numeric(10,6) |           | not null |
+ tz          | text          |           | not null |
+ tzoff       | integer       |           | not null |
+ sunrise     | integer       |           | not null |
+ sunset      | integer       |           | not null |
+ temp        | real          |           | not null |
+ feels_like  | real          |           | not null |
+ pressure    | integer       |           | not null |
+ humidity    | integer       |           | not null |
+ dew_point   | real          |           |          |
+ vis         | real          |           |          |
+ description | text          |           | not null |
+ clouds      | integer       |           |          |
+ wind_speed  | real          |           |          |
+ wind_deg    | integer       |           |          |
+ location_id | integer       |           |          |
+Indexes:
+    "openweather_data_pkey" PRIMARY KEY, btree (id)
+    "idx_lat_lon_dt" btree (lat, lon, dt)
+    "idx_unique_dt" UNIQUE, btree (dt)
+Foreign-key constraints:
+    "hourly_data_location_id_fkey" FOREIGN KEY (location_id) REFERENCES locations(id)
+
+openweather_historical=# \d daily_summary_data
+                                       Table "public.daily_summary_data"
+        Column         |     Type      | Collation | Nullable |                    Default
+-----------------------+---------------+-----------+----------+------------------------------------------------
+ id                    | integer       |           | not null | nextval('daily_summary_data_id_seq'::regclass)
+ lat                   | numeric(10,6) |           |          |
+ lon                   | numeric(10,6) |           |          |
+ tzoff                 | integer       |           |          |
+ date                  | integer       |           |          |
+ units                 | text          |           |          |
+ cloud_cover_afternoon | integer       |           |          |
+ humidity_afternoon    | integer       |           |          |
+ precipitation_total   | real          |           |          |
+ temperature_min       | real          |           |          |
+ temperature_max       | real          |           |          |
+ temperature_afternoon | real          |           |          |
+ temperature_night     | real          |           |          |
+ temperature_evening   | real          |           |          |
+ temperature_morning   | real          |           |          |
+ pressure_afternoon    | integer       |           |          |
+ wind_max_speed        | real          |           |          |
+ wind_max_direction    | integer       |           |          |
+ location_id           | integer       |           |          |
+Indexes:
+    "daily_summary_data_pkey" PRIMARY KEY, btree (id)
+    "daily_summary_data_lat_lon_date_key" UNIQUE CONSTRAINT, btree (lat, lon, date)
+    "idx_openweather_date" btree (date)
+Foreign-key constraints:
+    "daily_summary_data_location_id_fkey" FOREIGN KEY (location_id) REFERENCES locations(id)
+
+openweather_historical=#
+
+
+
+================
+
+openweather_forecast=# \d openweather_forecast
+                                          Table "public.openweather_forecast"
+      Column       |           Type           | Collation | Nullable |                     Default
+-------------------+--------------------------+-----------+----------+--------------------------------------------------
+ id                | integer                  |           | not null | nextval('openweather_forecast_id_seq'::regclass)
+ timestamp         | timestamp with time zone |           | not null |
+ lat               | double precision         |           | not null |
+ lon               | double precision         |           | not null |
+ day_1_dt          | timestamp with time zone |           |          |
+ day_1_temp        | double precision         |           |          |
+ day_1_feels_like  | double precision         |           |          |
+ day_1_pressure    | integer                  |           |          |
+ day_1_humidity    | integer                  |           |          |
+ day_1_dew_point   | double precision         |           |          |
+ day_1_uvi         | double precision         |           |          |
+ day_1_clouds      | integer                  |           |          |
+ day_1_vis         | double precision         |           |          |
+ day_1_wind_speed  | double precision         |           |          |
+ day_1_wind_deg    | integer                  |           |          |
+ day_1_wind_gust   | double precision         |           |          |
+ day_1_main        | text                     |           |          |
+ day_1_description | text                     |           |          |
+ day_2_dt          | timestamp with time zone |           |          |
+ day_2_temp        | double precision         |           |          |
+ day_2_feels_like  | double precision         |           |          |
+ day_2_pressure    | integer                  |           |          |
+ day_2_humidity    | integer                  |           |          |
+ day_2_dew_point   | double precision         |           |          |
+ day_2_uvi         | double precision         |           |          |
+ day_2_clouds      | integer                  |           |          |
+ day_2_vis         | double precision         |           |          |
+ day_2_wind_speed  | double precision         |           |          |
+ day_2_wind_deg    | integer                  |           |          |
+ day_2_wind_gust   | double precision         |           |          |
+ day_2_main        | text                     |           |          |
+ day_2_description | text                     |           |          |
+ day_3_dt          | timestamp with time zone |           |          |
+ day_3_temp        | double precision         |           |          |
+ day_3_feels_like  | double precision         |           |          |
+ day_3_pressure    | integer                  |           |          |
+ day_3_humidity    | integer                  |           |          |
+ day_3_dew_point   | double precision         |           |          |
+ day_3_uvi         | double precision         |           |          |
+ day_3_clouds      | integer                  |           |          |
+ day_3_vis         | double precision         |           |          |
+ day_3_wind_speed  | double precision         |           |          |
+ day_3_wind_deg    | integer                  |           |          |
+ day_3_wind_gust   | double precision         |           |          |
+ day_3_main        | text                     |           |          |
+ day_3_description | text                     |           |          |
+ day_4_dt          | timestamp with time zone |           |          |
+ day_4_temp        | double precision         |           |          |
+ day_4_feels_like  | double precision         |           |          |
+ day_4_pressure    | integer                  |           |          |
+ day_4_humidity    | integer                  |           |          |
+ day_4_dew_point   | double precision         |           |          |
+ day_4_uvi         | double precision         |           |          |
+ day_4_clouds      | integer                  |           |          |
+ day_4_vis         | double precision         |           |          |
+ day_4_wind_speed  | double precision         |           |          |
+ day_4_wind_deg    | integer                  |           |          |
+ day_4_wind_gust   | double precision         |           |          |
+ day_4_main        | text                     |           |          |
+ day_4_description | text                     |           |          |
+Indexes:
+    "openweather_forecast_pkey" PRIMARY KEY, btree (id)
+    "openweather_forecast_timestamp_lat_lon_key" UNIQUE CONSTRAINT, btree ("timestamp", lat, lon)
+
+openweather_forecast=# \d overview_data
+                                           Table "public.overview_data"
+      Column      |            Type             | Collation | Nullable |                  Default
+------------------+-----------------------------+-----------+----------+-------------------------------------------
+ id               | integer                     |           | not null | nextval('overview_data_id_seq'::regclass)
+ date             | date                        |           |          |
+ lat              | double precision            |           |          |
+ lon              | double precision            |           |          |
+ timezone         | text                        |           |          |
+ weather_overview | text                        |           |          |
+ api_call_id      | integer                     |           |          |
+ last_updated     | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ day              | integer                     |           |          |
+Indexes:
+    "overview_data_pkey" PRIMARY KEY, btree (id)
+Triggers:
+    set_timestamp BEFORE UPDATE ON overview_data FOR EACH ROW EXECUTE FUNCTION update_timestamp()
+
+openweather_forecast=#
+

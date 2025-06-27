@@ -1,0 +1,24 @@
+{
+  "zones": [
+    {
+      "zone_id": "BeetsTomatoes",
+      "station": "garden-hydrant",
+      "location": "excessus-home",
+      "controller": "uno-r4-wifi-primary",
+      "application_method": "drip",
+      "duration_default_minutes": 60,
+      "plants": ["Beet", "Tomato"],
+      "sensor_id": "BeetsTomatoes-USSolid"
+    },
+    {
+      "zone_id": "CucumberWatermelon",
+      "station": "garden-hydrant",
+      "location": "excessus-home",
+      "controller": "uno-r4-wifi-primary",
+      "application_method": "soaker",
+      "duration_default_minutes": 90,
+      "plants": ["Cucumber", "Watermelon"],
+      "sensor_id": "CucumberWatermelon-USSolid"
+    }
+  ]
+}

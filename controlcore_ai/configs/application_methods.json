@@ -1,0 +1,23 @@
+{
+  "drip": {
+    "penetration_rate": "slow",
+    "evaporation_loss": "low",
+    "cooling_effect": "none",
+    "timing_advice": "early_morning",
+    "suggested_duration_per_moisture_unit": 1.0
+  },
+  "soaker": {
+    "penetration_rate": "medium",
+    "evaporation_loss": "low",
+    "cooling_effect": "low",
+    "timing_advice": "early_morning_or_night",
+    "suggested_duration_per_moisture_unit": 1.25
+  },
+  "sprinkler": {
+    "penetration_rate": "fast",
+    "evaporation_loss": "high",
+    "cooling_effect": "high",
+    "timing_advice": "evening_only",
+    "suggested_duration_per_moisture_unit": 0.75
+  }
+}
