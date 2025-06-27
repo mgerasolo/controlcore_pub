@@ -1,11 +1,8 @@
 import os
-import sys
 import json
 from pathlib import Path
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
-from services.credential_fetch import CredentialFetch
+from ..services.credential_fetch import CredentialFetch
 from shared import load_environment, build_kv_dsn
 
 load_environment()

@@ -1,8 +1,7 @@
 import psycopg2
 import time
 from datetime import datetime, timedelta
-import sys
-from src.services.api_logger import APILogging
+from .api_logger import APILogging
 
 class APIControl:
     def __init__(self, api_call_type_id, script_name, platform, api_call_alt_name, daily_limit):

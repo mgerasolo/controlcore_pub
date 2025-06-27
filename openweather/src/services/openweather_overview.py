@@ -6,9 +6,9 @@ import sys
 import time
 import json
 import os
-from src.services.api_logger import APILogging
-from src.config.config import LATITUDE, LONGITUDE, WEATHER_FORECAST_DB_CONNECTION, API_KEY, DAILY_OVERVIEW_LIMIT
-from src.services.api_control import APIControl
+from .api_logger import APILogging
+from ..config.config import LATITUDE, LONGITUDE, WEATHER_FORECAST_DB_CONNECTION, API_KEY, DAILY_OVERVIEW_LIMIT
+from .api_control import APIControl
 
 class OpenWeatherDailyOverview:
     def __init__(self):

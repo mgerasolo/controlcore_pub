@@ -1,5 +1,4 @@
 import os
-import sys
 import psycopg2
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
@@ -7,8 +6,7 @@ import numpy as np
 
 from datetime import datetime
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
-from src.config.config import WEATHER_DB_CONNECTION, REQUEST_LOG_FILE, LOGGING_DB_CONNECTION
+from openweather.src.config.config import WEATHER_DB_CONNECTION, REQUEST_LOG_FILE, LOGGING_DB_CONNECTION
 
 def clear_screen():
     """

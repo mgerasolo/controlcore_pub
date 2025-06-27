@@ -4,9 +4,6 @@ import paho.mqtt.client as mqtt
 from datetime import datetime
 import logging
 import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 from shared import load_environment, build_dsn_from_env
 
 load_environment()
