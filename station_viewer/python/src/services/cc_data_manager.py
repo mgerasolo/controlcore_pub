@@ -23,6 +23,18 @@ VALID_SENSOR_TYPES = {
     "water-flow",
 }
 
+# Mapping of sensor identifiers to their associated location IDs
+SENSOR_LOCATION_MAP = {
+    "BeetsTomatoes-Valve": "excessus-home",
+    "BeetsTomatoes-USSolid": "excessus-home",
+    "BeetsTomatoes-Grieda": "excessus-home",
+    "StationExt-SHT-1": "excessus-home",
+    "StationExt-BMP-1": "excessus-home",
+    "BeetsTomatoes-Soil": "excessus-home",
+    "BeetsTomatoes-Light": "excessus-home",
+    "CucumberWatermelon-USSolid": "excessus-home",
+}
+
 
 # Setup logging
 LOG_DIR = os.path.join(os.path.dirname(__file__), '../../../logs/python/services')
@@ -55,6 +67,17 @@ def insert_sensor_data(payload):
     source_id = payload.get("source_id")
     if not source_id:
         log(f"⚠️ Missing source_id for {payload.get('sensor_id')}", level="warning")
+
+    # Derive the location based on the source_id prefix when available
+    location_id = None
+    if source_id:
+        prefix = source_id.split("_", 1)[0]
+        if prefix in SENSOR_LOCATION_MAP.values():
+            location_id = prefix
+
+    # Fallback to the older sensor_id mapping if prefix lookup failed
+    if not location_id:
+        location_id = SENSOR_LOCATION_MAP.get(payload.get("sensor_id"))
 
     received_at = resolve_timestamp(payload.get("timestamp"))
 
