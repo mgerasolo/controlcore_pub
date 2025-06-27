@@ -1,4 +1,6 @@
-CREATE USER controlcore_user WITH PASSWORD '34dfRT56gh67';
+-- Configure credentials using environment variables or a .env file.
+-- Replace <DB_PASSWORD> with your actual value before running this script.
+CREATE USER controlcore_user WITH PASSWORD '<DB_PASSWORD>';
 GRANT CONNECT ON DATABASE controlcore TO controlcore_user;
 GRANT USAGE ON SCHEMA public TO controlcore_user;
 GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO controlcore_user;
