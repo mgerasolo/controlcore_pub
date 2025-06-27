@@ -40,6 +40,7 @@ CREATE TABLE controller_boot_log (
 CREATE TABLE sensor_assignments (
     controller_id TEXT,
     pin INTEGER,
+    location_id TEXT,
     sensor_id TEXT,
     sensor_type TEXT,
     unit TEXT,
@@ -52,6 +53,7 @@ CREATE TABLE sensor_assignments (
 -- Sensor data (Timescale)
 CREATE TABLE sensor_data (
     sensor_id TEXT,
+    location_id TEXT,
     controller_id TEXT,
     station_id TEXT,
     pin INTEGER,

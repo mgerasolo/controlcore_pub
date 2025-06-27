@@ -41,6 +41,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.sensor_data (
     station_id text NOT NULL,
+    location_id text,
     controller_id text NOT NULL,
     sensor_id text NOT NULL,
     sensor_type text NOT NULL,
@@ -202,6 +203,7 @@ ALTER TABLE public.locations OWNER TO postgres;
 CREATE TABLE public.sensor_assignments (
     controller_id text NOT NULL,
     pin integer NOT NULL,
+    location_id text,
     sensor_id text,
     sensor_type text,
     unit text,

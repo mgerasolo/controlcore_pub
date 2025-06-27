@@ -10,6 +10,15 @@ load_environment()
 
 DB_DSN = build_dsn_from_env("controlcore", "PG_USER", "PG_PASSWORD")
 
+# Load mapping of sensor_id to location_id
+CONFIG_DIR = os.path.join(os.path.dirname(__file__), '../../../configs')
+SENSOR_LOCATION_FILE = os.path.join(CONFIG_DIR, 'sensor_locations.json')
+try:
+    with open(SENSOR_LOCATION_FILE) as f:
+        SENSOR_LOCATION_MAP = json.load(f)
+except FileNotFoundError:
+    SENSOR_LOCATION_MAP = {}
+
 
 
 VALID_SENSOR_TYPES = {
@@ -57,20 +66,27 @@ def insert_sensor_data(payload):
         log(f"⚠️ Missing source_id for {payload.get('sensor_id')}", level="warning")
 
     received_at = resolve_timestamp(payload.get("timestamp"))
+    location_id = SENSOR_LOCATION_MAP.get(payload.get("sensor_id"))
+    if location_id is None:
+        log(
+            f"⚠️ Unknown location for sensor {payload.get('sensor_id')}",
+            level="warning",
+        )
 
     with psycopg2.connect(DB_DSN) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 INSERT INTO sensor_data (
-                    sensor_id, controller_id, station_id, pin,
+                    station_id, location_id, controller_id, sensor_id, pin,
                     value, unit, source_id, sensor_type, received_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
-                    payload.get("sensor_id"),
-                    payload.get("controller"),
                     payload.get("station"),
+                    location_id,
+                    payload.get("controller"),
+                    payload.get("sensor_id"),
                     payload.get("pin", -1),
                     payload.get("value"),
                     payload.get("unit"),
