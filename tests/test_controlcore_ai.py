@@ -1,10 +1,4 @@
-import sys
-import pathlib
-
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-
-sys.path.append(str(ROOT))
-from controlcore_ai.core import advisor
+import controlcore_ai.core.advisor as advisor
 advise_watering = advisor.advise_watering
 
 
