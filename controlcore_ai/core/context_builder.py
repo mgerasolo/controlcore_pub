@@ -1,10 +1,8 @@
 import os
-import sys
 import psycopg2
 import json
 from datetime import datetime, timezone, timedelta
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from shared import load_environment, build_dsn_from_env
 
 load_environment()

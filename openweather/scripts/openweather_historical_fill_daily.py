@@ -1,12 +1,10 @@
 import json
 import os
-import sys
 import psycopg2
 from datetime import datetime, timedelta
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
-from src.services.openweather_summary import OpenWeatherDailySummary
-from src.config.config import (
+from openweather.src.services.openweather_summary import OpenWeatherDailySummary
+from openweather.src.config.config import (
     WEATHER_DB_CONNECTION,
     DAILY_SUMMARY_BATCH_LIMIT,
     DAILY_SUMMARY_BATCH_DIR,

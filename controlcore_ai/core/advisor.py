@@ -1,12 +1,10 @@
 import os
 import json
 from datetime import datetime, timezone, timedelta
-import sys
 from context_builder import load_zone_configs, resolve_location_from_zone, get_weather_context
 import psycopg2
 from psycopg2.extras import Json
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from shared import load_environment, build_dsn_from_env
 
 load_environment()

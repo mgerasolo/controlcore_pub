@@ -7,10 +7,8 @@ users to view, create, update, reset, and select configuration profiles.
 
 from pathlib import Path
 import os
-import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
-from src.config.config_manager import ConfigManager
+from openweather.src.config.config_manager import ConfigManager
 
 
 class ConfigMenu:

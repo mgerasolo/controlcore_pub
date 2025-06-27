@@ -1,7 +1,7 @@
 import datetime
 import psycopg2
 import os
-from src.config.config import REQUEST_LOG_FILE, LOGGING_DB_CONNECTION
+from ..config.config import REQUEST_LOG_FILE, LOGGING_DB_CONNECTION
 
 class APILogging:
     """

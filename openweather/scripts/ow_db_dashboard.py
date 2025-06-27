@@ -1,7 +1,7 @@
 from flask import Flask, render_template, jsonify, make_response
 import psycopg2
 from datetime import datetime, timedelta
-from src.config.config import WEATHER_DB_CONNECTION, LOGGING_DB_CONNECTION
+from openweather.src.config.config import WEATHER_DB_CONNECTION, LOGGING_DB_CONNECTION
 
 # Initialize Flask application
 app = Flask(__name__)

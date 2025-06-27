@@ -1,10 +1,7 @@
 import psycopg2
 from cryptography.fernet import Fernet
 import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-from src.config.config import WEATHER_DB_CONNECTION
+from ..config.config import WEATHER_DB_CONNECTION
 
 # Dynamically get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))

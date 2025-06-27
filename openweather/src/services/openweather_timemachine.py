@@ -2,17 +2,15 @@ import requests
 import sys
 from datetime import datetime, timezone
 import psycopg2
-import sys
 import time
 import json
 import os
 
 from pathlib import Path
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-from src.services.api_logger import APILogging
-from src.config.config import LATITUDE, LONGITUDE, WEATHER_DB_CONNECTION, API_KEY, TIME_MACHINE_LIMIT
-from src.services.api_control import APIControl
+from .api_logger import APILogging
+from ..config.config import LATITUDE, LONGITUDE, WEATHER_DB_CONNECTION, API_KEY, TIME_MACHINE_LIMIT
+from .api_control import APIControl
 
 class OpenWeatherTimemachine:
     """
