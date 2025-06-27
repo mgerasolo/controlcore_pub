@@ -25,3 +25,4 @@ station_viewer/python/src/services/.env
 controlcore_ai/core/.env
 controlcore_ai/core/__pycache__/
 
+__pycache__/

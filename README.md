@@ -6,6 +6,11 @@ This repo unifies three primary applications under the ControlCore irrigation an
 - `station_viewer`: Displays sensor and station data in a modern UI
 - `controlcore_ai`: Provides contextual watering advice and decision logic
 
+## Configuration
+
+Copy `.env.example` to `.env` and provide real values for the database and MQTT
+settings used by all modules.
+
 ## Planned Structure
 
 - Each module remains in its own subdirectory
