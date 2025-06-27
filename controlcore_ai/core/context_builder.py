@@ -1,27 +1,17 @@
 import os
+import sys
 import psycopg2
 import json
 from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
 
-load_dotenv()
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from shared import load_environment, build_dsn_from_env
 
-# Env variables for three databases
-PG_HOST = os.getenv("PG_HOST", "localhost")
-PG_PORT = os.getenv("PG_PORT", 5432)
+load_environment()
 
-CONTROLCORE_USER = os.getenv("CONTROLCORE_USER")
-CONTROLCORE_PW = os.getenv("CONTROLCORE_PW")
-
-OPENHIST_USER = os.getenv("OPENHIST_USER")
-OPENHIST_PW = os.getenv("OPENHIST_PW")
-
-OPENFORE_USER = os.getenv("OPENFORE_USER")
-OPENFORE_PW = os.getenv("OPENFORE_PW")
-
-DB_DSN_CONTROLCORE = f"postgresql://{CONTROLCORE_USER}:{CONTROLCORE_PW}@{PG_HOST}:{PG_PORT}/controlcore"
-DB_DSN_HISTORICAL = f"postgresql://{OPENHIST_USER}:{OPENHIST_PW}@{PG_HOST}:{PG_PORT}/openweather_historical"
-DB_DSN_FORECAST = f"postgresql://{OPENFORE_USER}:{OPENFORE_PW}@{PG_HOST}:{PG_PORT}/openweather_forecast"
+DB_DSN_CONTROLCORE = build_dsn_from_env("controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW")
+DB_DSN_HISTORICAL = build_dsn_from_env("openweather_historical", "OPENHIST_USER", "OPENHIST_PW")
+DB_DSN_FORECAST = build_dsn_from_env("openweather_forecast", "OPENFORE_USER", "OPENFORE_PW")
 
 def load_zone_configs():
     with open("../configs/zones.json") as f:

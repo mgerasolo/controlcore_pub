@@ -1,18 +1,14 @@
 import os
+import sys
 import psycopg2
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from shared import load_environment, build_dsn_from_env
 
-load_dotenv()
+load_environment()
 
-PG_HOST = os.getenv("PG_HOST", "localhost")
-PG_PORT = os.getenv("PG_PORT", 5432)
-
-CONTROLCORE_USER = os.getenv("CONTROLCORE_USER")
-CONTROLCORE_PW = os.getenv("CONTROLCORE_PW")
-
-DB_DSN = f"postgresql://{CONTROLCORE_USER}:{CONTROLCORE_PW}@{PG_HOST}:{PG_PORT}/controlcore"
+DB_DSN = build_dsn_from_env("controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW")
 
 
 def run_due_tasks():
