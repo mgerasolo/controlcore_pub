@@ -1,7 +1,11 @@
 import os
 import json
 from datetime import datetime, timezone, timedelta
-from context_builder import load_zone_configs, resolve_location_from_zone, get_weather_context
+from .context_builder import (
+    load_zone_configs,
+    resolve_location_from_zone,
+    get_weather_context,
+)
 import psycopg2
 from psycopg2.extras import Json
 
@@ -12,12 +16,18 @@ load_environment()
 DB_DSN_CONTROLCORE = build_dsn_from_env("controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW")
 
 
-def load_json_config(path):
-    with open(path) as f:
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def load_json_config(path: str | Path):
+    config_path = BASE_DIR / path
+    with open(config_path) as f:
         return json.load(f)
 
-plant_profiles = load_json_config("../configs/plant_profiles.json")
-method_config = load_json_config("../configs/application_methods.json")
+plant_profiles = load_json_config("configs/plant_profiles.json")
+method_config = load_json_config("configs/application_methods.json")
 
 
 
