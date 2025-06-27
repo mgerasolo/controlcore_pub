@@ -1,17 +1,10 @@
-import os
 import sys
 import pathlib
-import importlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 sys.path.append(str(ROOT))
-sys.path.append(str(ROOT / 'controlcore_ai' / 'core'))
-
-_cwd = os.getcwd()
-os.chdir(ROOT / 'controlcore_ai' / 'core')
-advisor = importlib.import_module('advisor')
-os.chdir(_cwd)
+from controlcore_ai.core import advisor
 advise_watering = advisor.advise_watering
 
 

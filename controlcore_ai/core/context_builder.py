@@ -1,18 +1,22 @@
 import os
-import psycopg2
 import json
+from pathlib import Path
 from datetime import datetime, timezone, timedelta
+import psycopg2
 
 from shared import load_environment, build_dsn_from_env
 
 load_environment()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 DB_DSN_CONTROLCORE = build_dsn_from_env("controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW")
 DB_DSN_HISTORICAL = build_dsn_from_env("openweather_historical", "OPENHIST_USER", "OPENHIST_PW")
 DB_DSN_FORECAST = build_dsn_from_env("openweather_forecast", "OPENFORE_USER", "OPENFORE_PW")
 
 def load_zone_configs():
-    with open("../configs/zones.json") as f:
+    config_path = BASE_DIR / "configs" / "zones.json"
+    with open(config_path) as f:
         return json.load(f)["zones"]
 
 def resolve_location_from_zone(zone):
