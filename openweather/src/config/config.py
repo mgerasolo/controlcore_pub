@@ -4,7 +4,11 @@ import json
 from pathlib import Path
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 from services.credential_fetch import CredentialFetch
+from shared import load_environment, build_kv_dsn
+
+load_environment()
 
 
 # Define the base directory of the project
@@ -181,15 +185,30 @@ def fill_credentials():
     try:
         # Fetch and set logging database credentials
         logging_credentials = fetcher.api_credential_fetch('LOGGING_DB_CONNECTION')
-        LOGGING_DB_CONNECTION = f"dbname={logging_credentials['dbname']} user={logging_credentials['username']} password={logging_credentials['password']} host=localhost"
+        LOGGING_DB_CONNECTION = build_kv_dsn(
+            logging_credentials['username'],
+            logging_credentials['password'],
+            logging_credentials['dbname'],
+            host='localhost'
+        )
 
         # Fetch and set weather database credentials
         weather_credentials = fetcher.api_credential_fetch('WEATHER_DB_CONNECTION')
-        WEATHER_DB_CONNECTION = f"dbname={weather_credentials['dbname']} user={weather_credentials['username']} password={weather_credentials['password']} host=localhost"
+        WEATHER_DB_CONNECTION = build_kv_dsn(
+            weather_credentials['username'],
+            weather_credentials['password'],
+            weather_credentials['dbname'],
+            host='localhost'
+        )
 
         # Fetch and set forecast database credentials
         forecast_credentials = fetcher.api_credential_fetch('WEATHER_FORECAST_DB_CONNECTION')
-        WEATHER_FORECAST_DB_CONNECTION = f"dbname={forecast_credentials['dbname']} user={forecast_credentials['username']} password={forecast_credentials['password']} host=localhost"
+        WEATHER_FORECAST_DB_CONNECTION = build_kv_dsn(
+            forecast_credentials['username'],
+            forecast_credentials['password'],
+            forecast_credentials['dbname'],
+            host='localhost'
+        )
 
         # Fetch and set OpenWeather API Key
         api_credentials = fetcher.api_credential_fetch('ow_api_token_excessus1')
