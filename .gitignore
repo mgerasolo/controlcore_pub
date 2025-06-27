@@ -15,6 +15,7 @@ openweather/data/batch_files
 openweather/source
 openweather/build
 openweather/.env
+openweather/data/database_setup/populated
 
 station_viewer/node_modules/
 station_viewer/arduino/lib/WiFiCredentials.h
@@ -26,3 +27,5 @@ controlcore_ai/core/.env
 controlcore_ai/core/__pycache__/
 
 __pycache__/
+.env
+
