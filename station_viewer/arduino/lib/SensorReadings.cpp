@@ -1,3 +1,6 @@
+#include "SensorConfig.h"
+#include "SensorReadings.h"
+
 float readValveState(const SensorConfig& sensor) {
   return 0;  // Replace with real logic
 }

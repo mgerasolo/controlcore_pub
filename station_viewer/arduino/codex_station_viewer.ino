@@ -11,7 +11,7 @@
 #include "lib/ControlCore_Config.h"
 #include "lib/SensorConfig.h"
 #include "lib/WiFiCredentials.h"
-#include "lib/SensorReadings.cpp"
+#include "lib/SensorReadings.h"
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
