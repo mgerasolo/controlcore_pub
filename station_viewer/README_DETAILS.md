@@ -32,6 +32,12 @@ Example:
 { "sensor_id": "StationExt-SHT-1", "sensor_type": "humidity", "value": 43.1, "unit": "%RH", "source_id": "excessus-home_garden-hydrant_uno-r4-wifi-primary_humidity_StationExt-SHT-1" }
 ```
 
+### Sensor Calibration
+
+`SensorConfig.h` defines `offset` and `scale` fields. Each read function
+applies `(raw + offset) * scale` before publishing. Adjust these per sensor to
+calibrate measurements.
+
 ---
 
 ## 📁 Project Structure - Dev Reference - Designed to support modular frontend updates via [Vercel V0](https://v0.dev) and backend/firmware linting with OpenAI Codex.
