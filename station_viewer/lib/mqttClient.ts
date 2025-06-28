@@ -43,7 +43,7 @@ class MQTTClient {
           ...raw,
           ...parsed,
           timestamp: new Date(Number(raw.timestamp) * 1000),
-        }
+        } as SensorReading
         this.subscribers.forEach((cb) => cb(data))
       } catch (err) {
         console.error("Invalid MQTT payload:", err)

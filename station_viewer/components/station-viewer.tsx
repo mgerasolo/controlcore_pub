@@ -92,8 +92,16 @@ export default function StationViewer() {
         <CardContent className="pt-0">
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-2xl font-bold">{sensor.value}</span>
-              <span className="text-sm text-muted-foreground">{sensor.unit}</span>
+              {sensor.error ? (
+                <span className="text-red-600 text-sm font-semibold">
+                  Error: {sensor.error}
+                </span>
+              ) : (
+                <>
+                  <span className="text-2xl font-bold">{sensor.value}</span>
+                  <span className="text-sm text-muted-foreground">{sensor.unit}</span>
+                </>
+              )}
             </div>
             <div className="text-xs text-muted-foreground space-y-1">
               <div className="flex items-center gap-1">

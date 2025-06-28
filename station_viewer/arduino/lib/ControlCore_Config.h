@@ -2,6 +2,7 @@
 #define CONTROL_CORE_CONFIG_H
 
 #include <PubSubClient.h>
+#include <math.h>
 
 // 💧 Station + Controller Identity
 #define LOCATION "excessus-home"
@@ -22,9 +23,15 @@ inline void publishSensorReading(PubSubClient& client, const char* sensor_id, co
   snprintf(topic, sizeof(topic), "controlcore/data/%s/%s", STATION_NAME, sensor_id);
 
   char payload[256];
-  snprintf(payload, sizeof(payload),
-    "{\"station\":\"%s\",\"controller\":\"%s\",\"sensor_id\":\"%s\",\"value\":%.2f,\"unit\":\"%s\",\"type\":\"%s\",\"pin\":%d,\"timestamp\":%lu}",
-    STATION_NAME, CONTROLLER_ID, sensor_id, value, unit, type, pin, timestamp);
+  if (isnan(value)) {
+    snprintf(payload, sizeof(payload),
+      "{\"station\":\"%s\",\"controller\":\"%s\",\"sensor_id\":\"%s\",\"unit\":\"%s\",\"type\":\"%s\",\"pin\":%d,\"timestamp\":%lu,\"error\":\"read_failure\"}",
+      STATION_NAME, CONTROLLER_ID, sensor_id, unit, type, pin, timestamp);
+  } else {
+    snprintf(payload, sizeof(payload),
+      "{\"station\":\"%s\",\"controller\":\"%s\",\"sensor_id\":\"%s\",\"value\":%.2f,\"unit\":\"%s\",\"type\":\"%s\",\"pin\":%d,\"timestamp\":%lu}",
+      STATION_NAME, CONTROLLER_ID, sensor_id, value, unit, type, pin, timestamp);
+  }
 
   client.publish(topic, payload);
 }
