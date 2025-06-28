@@ -11,6 +11,7 @@
 #include "lib/ControlCore_Config.h"
 #include "lib/SensorConfig.h"
 #include "lib/WiFiCredentials.h"
+#include "lib/SensorReadings.cpp"
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -106,8 +107,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 }
 
 void setup() {
+
   Serial.begin(115200);
+  delay(1500);
+
   Wire.begin();
+  delay(1500);
   pinMode(RELAY_PIN, OUTPUT);
   setValveState(false);
 

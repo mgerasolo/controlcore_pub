@@ -39,8 +39,8 @@ float readLightIntensity(const SensorConfig& sensor);
 
 #define ID(base, suffix) LOCATION "_" STATION_NAME "_" CONTROLLER_ID "_" base "_" suffix
 
-#define VALVE_SENSOR_ID "BeetsTomatoes-Valve"
-#define WATER_PRESSURE_SENSOR_ID "BeetsTomatoes-USSolid"
+#define VALVE_SENSOR_ID "BeetsTomatoes-USSolid"
+#define WATER_PRESSURE_SENSOR_ID "BeetsTomatoes-Foush"
 #define WATER_FLOW_SENSOR_ID "BeetsTomatoes-Grieda"
 #define SHT_SENSOR_ID "StationExt-SHT-1"
 #define BMP_SENSOR_ID "StationExt-BMP-1"
