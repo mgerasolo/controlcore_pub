@@ -50,6 +50,14 @@ Use dot_env
 
 Install dependencies with `pip install -r python/requirements.txt`.
 
+### Arduino Station Layout
+
+Before compiling the firmware, edit `arduino/lib/StationLayout.h` to reflect your
+station's location, controller ID and attached sensors.  The file contains the
+`sensors` array and macros such as `LOCATION` and `STATION_NAME` used by the
+sketch.  Adjust these values for your hardware setup and save the file before
+building with the Arduino IDE or `arduino-cli`.
+
 ## 📈 What's Next
 
 - Historical analysis via TimescaleDB or InfluxDB

@@ -3,11 +3,7 @@
 
 #include <PubSubClient.h>
 #include <math.h>
-
-// 💧 Station + Controller Identity
-#define LOCATION "excessus-home"
-#define STATION_NAME "garden-hydrant"
-#define CONTROLLER_ID "uno-r4-wifi-primary"
+#include "StationLayout.h"
 
 // 🔐 Max MQTT topic length guard
 #define MAX_TOPIC_LEN 128
