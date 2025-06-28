@@ -24,21 +24,49 @@ float readWaterFlow(const SensorConfig& sensor) {
 
 float readTemperatureSHT(const SensorConfig& sensor) {
   float raw = sht31.readTemperature();
+  if (isnan(raw)) {
+    Serial.println("SHT31 readTemperature failed, resetting I2C");
+    Wire.end();
+    Wire.begin();
+    sht31.begin(0x44);
+    raw = sht31.readTemperature();
+  }
   return applyCalibration(sensor, raw);
 }
 
 float readHumiditySHT(const SensorConfig& sensor) {
   float raw = sht31.readHumidity();
+  if (isnan(raw)) {
+    Serial.println("SHT31 readHumidity failed, resetting I2C");
+    Wire.end();
+    Wire.begin();
+    sht31.begin(0x44);
+    raw = sht31.readHumidity();
+  }
   return applyCalibration(sensor, raw);
 }
 
 float readPressureBMP(const SensorConfig& sensor) {
   float raw = bmp280.readPressure() / 100.0F;  // Convert Pa to hPa
+  if (isnan(raw)) {
+    Serial.println("BMP280 readPressure failed, resetting I2C");
+    Wire.end();
+    Wire.begin();
+    bmp280.begin(0x76);
+    raw = bmp280.readPressure() / 100.0F;
+  }
   return applyCalibration(sensor, raw);
 }
 
 float readTemperatureBMP(const SensorConfig& sensor) {
   float raw = bmp280.readTemperature();
+  if (isnan(raw)) {
+    Serial.println("BMP280 readTemperature failed, resetting I2C");
+    Wire.end();
+    Wire.begin();
+    bmp280.begin(0x76);
+    raw = bmp280.readTemperature();
+  }
   return applyCalibration(sensor, raw);
 }
 
