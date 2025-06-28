@@ -34,9 +34,15 @@ export default function StationViewer() {
               s.sensor_type === reading.sensor_type
             )
         )
-        return [...filtered, reading].sort(
-          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
-        )
+        const result = [...filtered, reading]
+        result.sort((a, b) => {
+          const aId = `${a.sensor_id}_${a.sensor_type}`
+          const bId = `${b.sensor_id}_${b.sensor_type}`
+          if (aId < bId) return -1
+          if (aId > bId) return 1
+          return 0
+        })
+        return result
       })
     })
 
