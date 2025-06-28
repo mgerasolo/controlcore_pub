@@ -141,12 +141,19 @@ void setup() {
 
   Serial.println("Starting NTP client");
   timeClient.begin();
-  while (!(timeSynced = timeClient.forceUpdate())) {
+  for (int i = 0; i < 3; ++i) {
+    if ((timeSynced = timeClient.forceUpdate())) {
+      break;
+    }
     Serial.println("NTP sync failed, retrying...");
     delay(500);
   }
   lastNtpSync = millis();
-  Serial.println("NTP synced");
+  if (!timeSynced) {
+    Serial.println("WARNING: NTP unsynchronized");
+  } else {
+    Serial.println("NTP synced");
+  }
 
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
