@@ -26,9 +26,17 @@ export default function StationViewer() {
   useEffect(() => {
     const unsubscribe = mqttClient.subscribe((reading: SensorReading) => {
       setSensors((prev) => {
-        // Remove old reading for the same sensor_id and add new one
-        const filtered = prev.filter((s) => s.sensor_id !== reading.sensor_id)
-        return [...filtered, reading].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        // Replace any existing reading from the same sensor_id & sensor_type
+        const filtered = prev.filter(
+          (s) =>
+            !(
+              s.sensor_id === reading.sensor_id &&
+              s.sensor_type === reading.sensor_type
+            )
+        )
+        return [...filtered, reading].sort(
+          (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+        )
       })
     })
 
@@ -166,9 +174,12 @@ export default function StationViewer() {
                         🎛️ Controller: {controller.split("_").pop()}
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {sensorList.map((sensor) => (
-                          <SensorCard key={sensor.sensor_id} sensor={sensor} />
-                        ))}
+                          {sensorList.map((sensor) => (
+                            <SensorCard
+                              key={`${sensor.sensor_id}_${sensor.sensor_type}`}
+                              sensor={sensor}
+                            />
+                          ))}
                       </div>
                     </div>
                   ))}
@@ -202,9 +213,12 @@ export default function StationViewer() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {sensorList.map((sensor) => (
-                      <SensorCard key={sensor.sensor_id} sensor={sensor} />
-                    ))}
+                      {sensorList.map((sensor) => (
+                        <SensorCard
+                          key={`${sensor.sensor_id}_${sensor.sensor_type}`}
+                          sensor={sensor}
+                        />
+                      ))}
                   </div>
                 </CardContent>
               </Card>
@@ -232,10 +246,13 @@ export default function StationViewer() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {sensors
-                .filter((s) => s.sensor_type === "valve-state")
-                .map((sensor) => (
-                  <div key={sensor.sensor_id} className="space-y-2 border rounded-md p-4">
+                {sensors
+                  .filter((s) => s.sensor_type === "valve-state")
+                  .map((sensor) => (
+                    <div
+                      key={`${sensor.sensor_id}_${sensor.sensor_type}`}
+                      className="space-y-2 border rounded-md p-4"
+                    >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">
                         {sensor.enumeratorOrName || sensor.sensor_id}
