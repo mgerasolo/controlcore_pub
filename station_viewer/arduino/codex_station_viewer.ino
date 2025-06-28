@@ -110,17 +110,39 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   setValveState(false);
 
-  while (!sht31.begin(0x44)) {
-    Serial.println("SHT31 init failed, retrying...");
-    delay(500);
+  {
+    bool initialized = false;
+    for (int attempts = 0; attempts < 3; ++attempts) {
+      if (sht31.begin(0x44)) {
+        initialized = true;
+        break;
+      }
+      Serial.println("SHT31 init failed, retrying...");
+      delay(500);
+    }
+    if (initialized) {
+      Serial.println("SHT31 initialized");
+    } else {
+      Serial.println("SHT31 init failed after 3 attempts, proceeding");
+    }
   }
-  Serial.println("SHT31 initialized");
 
-  while (!bmp280.begin(0x76)) {
-    Serial.println("BMP280 init failed, retrying...");
-    delay(500);
+  {
+    bool initialized = false;
+    for (int attempts = 0; attempts < 3; ++attempts) {
+      if (bmp280.begin(0x76)) {
+        initialized = true;
+        break;
+      }
+      Serial.println("BMP280 init failed, retrying...");
+      delay(500);
+    }
+    if (initialized) {
+      Serial.println("BMP280 initialized");
+    } else {
+      Serial.println("BMP280 init failed after 3 attempts, proceeding");
+    }
   }
-  Serial.println("BMP280 initialized");
 
   while (true) {
     Serial.print("Connecting to WiFi");
