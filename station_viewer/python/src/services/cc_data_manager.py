@@ -32,8 +32,8 @@ VALID_SENSOR_TYPES = {
     "water-flow",
 }
 
-# Mapping of sensor identifiers to their associated location IDs
-SENSOR_LOCATION_MAP = {
+# Additional hard-coded sensor mappings for backward compatibility
+DEFAULT_SENSOR_LOCATIONS = {
     "BeetsTomatoes-Valve": "excessus-home",
     "BeetsTomatoes-USSolid": "excessus-home",
     "BeetsTomatoes-Grieda": "excessus-home",
@@ -43,6 +43,8 @@ SENSOR_LOCATION_MAP = {
     "BeetsTomatoes-Light": "excessus-home",
     "CucumberWatermelon-USSolid": "excessus-home",
 }
+
+SENSOR_LOCATION_MAP.update(DEFAULT_SENSOR_LOCATIONS)
 
 
 # Setup logging
@@ -89,7 +91,6 @@ def insert_sensor_data(payload):
         location_id = SENSOR_LOCATION_MAP.get(payload.get("sensor_id"))
 
     received_at = resolve_timestamp(payload.get("timestamp"))
-    location_id = SENSOR_LOCATION_MAP.get(payload.get("sensor_id"))
     if location_id is None:
         log(
             f"⚠️ Unknown location for sensor {payload.get('sensor_id')}",
