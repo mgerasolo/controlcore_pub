@@ -18,6 +18,8 @@ struct SensorConfig {
   float (*readFunc)(const SensorConfig&);
   const char* notes;
   const char* type;  // Canonical sensor_type
+  float offset;      // calibration offset added to raw reading
+  float scale;       // calibration multiplier applied after offset
 };
 
 // === Function declarations ===
@@ -56,7 +58,9 @@ const SensorConfig sensors[] = {
     -1,
     readValveState,
     "Derived from relay state on pin 8",
-    "valve-state"
+    "valve-state",
+    0.0,
+    1.0
   },
   {
     WATER_PRESSURE_SENSOR_ID,
@@ -66,7 +70,9 @@ const SensorConfig sensors[] = {
     A0,
     readWaterPressure,
     "0.5–4.5V analog sensor on A0",
-    "water-pressure"
+    "water-pressure",
+    0.0,
+    1.0
   },
   {
     WATER_FLOW_SENSOR_ID,
@@ -76,7 +82,9 @@ const SensorConfig sensors[] = {
     2,
     readWaterFlow,
     "Pulse output sensor on pin 2",
-    "water-flow"
+    "water-flow",
+    0.0,
+    1.0
   },
   {
     SHT_SENSOR_ID,
@@ -86,7 +94,9 @@ const SensorConfig sensors[] = {
     -1,
     readTemperatureSHT,
     "SHT31-D over I2C (A4/A5)",
-    "temperature"
+    "temperature",
+    0.0,
+    1.0
   },
   {
     SHT_SENSOR_ID,
@@ -96,7 +106,9 @@ const SensorConfig sensors[] = {
     -1,
     readHumiditySHT,
     "SHT31-D over I2C (A4/A5)",
-    "humidity"
+    "humidity",
+    0.0,
+    1.0
   },
   {
     BMP_SENSOR_ID,
@@ -106,7 +118,9 @@ const SensorConfig sensors[] = {
     -1,
     readPressureBMP,
     "BMP280 over I2C (A4/A5)",
-    "barometric-pressure"
+    "barometric-pressure",
+    0.0,
+    1.0
   },
   {
     BMP_SENSOR_ID,
@@ -116,7 +130,9 @@ const SensorConfig sensors[] = {
     -1,
     readTemperatureBMP,
     "BMP280 over I2C (A4/A5)",
-    "temperature"
+    "temperature",
+    0.0,
+    1.0
   },
   {
     SOIL_SENSOR_ID,
@@ -126,7 +142,9 @@ const SensorConfig sensors[] = {
     A3,
     readSoilMoisture,
     "Capacitive analog soil sensor on A3",
-    "soil-moisture"
+    "soil-moisture",
+    0.0,
+    1.0
   },
   {
     LIGHT_SENSOR_ID,
@@ -136,7 +154,9 @@ const SensorConfig sensors[] = {
     A5,
     readLightIntensity,
     "LDR voltage divider on A5",
-    "light-intensity"
+    "light-intensity",
+    0.0,
+    1.0
   }
 };
 

@@ -51,19 +51,6 @@ unsigned long getTimestamp() {
   return millis() / 1000;
 }
 
-float readSensorValue(const SensorConfig& sensor) {
-  if (strcmp(sensor.type, "valve-state") == 0) return valveOpen ? 1 : 0;
-  if (strcmp(sensor.type, "temperature") == 0) {
-    if (strstr(sensor.sensor_id, "SHT")) return sht31.readTemperature();
-    if (strstr(sensor.sensor_id, "BMP")) return bmp280.readTemperature();
-  }
-  if (strcmp(sensor.type, "humidity") == 0 && strstr(sensor.sensor_id, "SHT")) return sht31.readHumidity();
-  if (strcmp(sensor.type, "barometric-pressure") == 0) return bmp280.readPressure() / 100.0;
-  if (strcmp(sensor.type, "soil-moisture") == 0 || strcmp(sensor.type, "light-intensity") == 0) return analogRead(sensor.pin);
-  if (strcmp(sensor.type, "water-pressure") == 0) return analogRead(sensor.pin);
-  if (strcmp(sensor.type, "water-flow") == 0) return analogRead(sensor.pin);
-  return 0.0;
-}
 
 void publishSensorReading(const SensorConfig& sensor, float value) {
   StaticJsonDocument<512> doc;
@@ -152,7 +139,7 @@ void loop() {
   if (millis() - lastPublish > 10000) {
     lastPublish = millis();
     for (int i = 0; i < numSensors; ++i) {
-      float val = readSensorValue(sensors[i]);
+      float val = sensors[i].readFunc(sensors[i]);
       publishSensorReading(sensors[i], val);
     }
   }
