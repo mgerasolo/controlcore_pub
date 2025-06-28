@@ -4,6 +4,7 @@
 #include <Adafruit_BMP280.h>
 #include <WiFiS3.h>
 #include <PubSubClient.h>
+#include <math.h>
 #include <ArduinoJson.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
@@ -61,6 +62,9 @@ void publishSensorReading(const SensorConfig& sensor, float value) {
   doc["source_id"] = sensor.source_id;
   doc["unit"] = sensor.unit;
   doc["value"] = value;
+  if (isnan(value)) {
+    doc["error"] = "read_failure";
+  }
   doc["pin"] = sensor.pin;
   doc["timestamp"] = getTimestamp();
 

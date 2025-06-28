@@ -8,6 +8,7 @@ export interface SensorReading {
   value: number
   pin: number
   timestamp: Date
+  error?: string
   // Parsed fields from source_id
   locationNickname?: string
   stationLocation?: string
