@@ -18,6 +18,8 @@ PubSubClient mqttClient(wifiClient);
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org");
 bool timeSynced = false;
+unsigned long lastNtpSync = 0;
+const unsigned long NTP_SYNC_INTERVAL = 3600000UL; // 1 hour
 
 // Relay Control
 const int RELAY_PIN = 8;
@@ -122,10 +124,12 @@ void setup() {
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) delay(500);
 
-  delay(5000);  //NTP Init
+  delay(5000);  // NTP Init
   timeClient.begin();
-  delay(2000); //NTP Init
-  timeSynced = timeClient.forceUpdate();
+  while (!(timeSynced = timeClient.forceUpdate())) {
+    delay(500);
+  }
+  lastNtpSync = millis();
 
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
@@ -134,6 +138,11 @@ void setup() {
 void loop() {
   if (!mqttClient.connected()) reconnectMQTT();
   mqttClient.loop();
+
+  if (millis() - lastNtpSync >= NTP_SYNC_INTERVAL) {
+    timeSynced = timeClient.forceUpdate();
+    lastNtpSync = millis();
+  }
 
   if (valveOpen && valveCloseAt > 0 && getTimestamp() >= valveCloseAt) {
     setValveState(false);
