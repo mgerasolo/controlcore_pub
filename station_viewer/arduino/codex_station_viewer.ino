@@ -110,18 +110,43 @@ void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   setValveState(false);
 
-  sht31.begin(0x44);
-  bmp280.begin(0x76);
+  while (!sht31.begin(0x44)) {
+    Serial.println("SHT31 init failed, retrying...");
+    delay(500);
+  }
+  Serial.println("SHT31 initialized");
 
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) delay(500);
+  while (!bmp280.begin(0x76)) {
+    Serial.println("BMP280 init failed, retrying...");
+    delay(500);
+  }
+  Serial.println("BMP280 initialized");
 
-  delay(5000);  // NTP Init
+  while (true) {
+    Serial.print("Connecting to WiFi");
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    unsigned long start = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - start < 15000) {
+      Serial.print('.');
+      delay(500);
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println(" connected");
+      break;
+    }
+    Serial.println(" failed, retrying");
+    WiFi.disconnect();
+    delay(1000);
+  }
+
+  Serial.println("Starting NTP client");
   timeClient.begin();
   while (!(timeSynced = timeClient.forceUpdate())) {
+    Serial.println("NTP sync failed, retrying...");
     delay(500);
   }
   lastNtpSync = millis();
+  Serial.println("NTP synced");
 
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
