@@ -15,6 +15,7 @@ This project includes:
 - **Physical View**: Groups sensors by physical `station → controller → sensors`
 - **Logical View**: Groups sensors by functional `sensor_type`
 - **Manual Overrides**: Send MQTT commands to control devices by `sensor_id`
+- Commands include a `source_id` for tracing the originating sensor path
 - Sensor freshness, pin, controller, and unit displayed
 - Designed for small garden control systems and scale-out field deployments
 

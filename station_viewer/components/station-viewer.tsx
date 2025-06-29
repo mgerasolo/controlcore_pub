@@ -70,6 +70,7 @@ export default function StationViewer() {
       station: sensor.station,
       controller: sensor.controller,
       sensor_id: sensor.sensor_id,
+      source_id: sensor.source_id || "",
       sensor_type: sensor.sensor_type,
       unit: action === "open" ? "seconds" : "state",
       value: action === "open" ? duration : 0,
