@@ -3,6 +3,7 @@ sys.path.append('.')
 import controlcore_ai.core.advisor as advisor
 import psycopg2
 from controlcore_ai.core.status_logger import update_status
+from controlcore_ai.core.master import should_run
 advise_watering = advisor.advise_watering
 
 
@@ -48,4 +49,15 @@ def test_update_status_inserts(monkeypatch):
     monkeypatch.setattr(psycopg2, "connect", lambda *a, **k: conn)
     update_status("advisor", "ok", {"foo": "bar"})
     assert "module_status" in conn.cursor_obj.query
+
+def test_should_run_logic():
+    from datetime import datetime, timezone, timedelta
+
+    assert should_run(None, 5)
+
+    last = datetime.now(timezone.utc) - timedelta(minutes=10)
+    assert should_run(last, 5)
+
+    recent = datetime.now(timezone.utc) - timedelta(minutes=2)
+    assert not should_run(recent, 5)
 
