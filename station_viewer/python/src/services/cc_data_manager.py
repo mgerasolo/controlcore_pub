@@ -128,8 +128,9 @@ def insert_control_log(payload):
             cur.execute("""
                 INSERT INTO control_log (
                     station, controller_id, sensor_id, sensor_type,
-                    command, value, unit, source, requestor_id, received_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    command, value, unit, source, requestor_id, source_id,
+                    received_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 payload.get("station"),
                 payload.get("controller"),
@@ -140,6 +141,7 @@ def insert_control_log(payload):
                 payload.get("unit"),
                 payload.get("source"),
                 payload.get("requestor_id"),
+                payload.get("source_id"),
                 received_at,
                 ),
             )
