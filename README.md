@@ -17,6 +17,15 @@ settings used by all modules.
 - Shared configs and common code go in `shared/`
 - A lightweight controller script coordinates execution
 
+### Control AI Master
+
+The master runner at `controlcore_ai.core.master` can be invoked periodically
+via cron or a systemd timer. It always runs the watering `runner` and triggers
+`advisor` and `forecast_regression` after their configured intervals elapse.
+Use the environment variables `ADVISOR_INTERVAL_MINUTES` and
+`FORECAST_REGRESSION_INTERVAL_MINUTES` or pass `--advisor-interval` and
+`--forecast-interval` to adjust timings.
+
 ## Short Term Goals
 
 - Enable unified testing and Codex-assisted review
