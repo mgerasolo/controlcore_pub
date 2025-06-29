@@ -50,7 +50,6 @@ def test_update_status_inserts(monkeypatch):
     update_status("advisor", "ok", {"foo": "bar"})
     assert "module_status" in conn.cursor_obj.query
 
-
 def test_should_run_logic():
     from datetime import datetime, timezone, timedelta
 
