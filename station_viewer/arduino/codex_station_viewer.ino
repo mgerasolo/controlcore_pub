@@ -37,7 +37,7 @@ void setValveState(bool open, unsigned long duration = MAX_VALVE_DURATION) {
   valveOpen = open;
   digitalWrite(RELAY_PIN, open ? HIGH : LOW);
   if (open) {
-    unsigned long now = millis() / 1000;
+    unsigned long now = getTimestamp();
     if (duration == 0 || duration > MAX_VALVE_DURATION) duration = MAX_VALVE_DURATION;
     valveCloseAt = now + duration;
   } else {
