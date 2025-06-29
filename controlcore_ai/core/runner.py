@@ -3,6 +3,7 @@ import psycopg2
 from datetime import datetime, timezone
 
 from shared import load_environment, build_dsn_from_env
+from .status_logger import update_status
 
 load_environment()
 
@@ -51,6 +52,8 @@ def run_due_tasks():
                 """, (id,))
 
                 print(f"[runner] ✅ Triggered zone '{zone_id}' for {duration_seconds // 60} minutes")
+
+    update_status("runner", "completed", {"tasks": len(rows)})
 
 
 if __name__ == "__main__":

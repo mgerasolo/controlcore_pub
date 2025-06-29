@@ -10,6 +10,7 @@ import psycopg2
 from psycopg2.extras import Json
 
 from shared import load_environment, build_dsn_from_env
+from .status_logger import update_status
 
 load_environment()
 
@@ -178,3 +179,5 @@ if __name__ == "__main__":
         print(f"\U0001F4CD Advice: {decision}")
         for reason in reasons:
             print(f"  - {reason}")
+
+    update_status("advisor", "completed", {"zones": len(zones)})

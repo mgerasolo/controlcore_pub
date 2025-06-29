@@ -6,6 +6,7 @@ import pandas as pd
 import psycopg2
 
 from shared import load_environment, build_dsn_from_env
+from .status_logger import update_status
 
 load_environment()
 
@@ -148,6 +149,7 @@ def main():
     df = run_forecast_regression(args.days, args.store)
     metrics = calculate_error_metrics(df)
     print(f"MAE: {metrics['mae']:.2f}\nRMSE: {metrics['rmse']:.2f}")
+    update_status("forecast_regression", "completed", metrics)
 
 
 if __name__ == "__main__":
