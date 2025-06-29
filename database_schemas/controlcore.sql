@@ -276,6 +276,20 @@ ALTER SEQUENCE public.watering_schedule_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE public.watering_schedule_id_seq OWNED BY public.watering_schedule.id;
 
+--
+-- Name: module_status; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.module_status (
+    module_name text PRIMARY KEY,
+    last_run_time timestamp with time zone NOT NULL,
+    status text,
+    details jsonb
+);
+
+
+ALTER TABLE public.module_status OWNER TO postgres;
+
 
 --
 -- Name: _hyper_2_18_chunk received_at; Type: DEFAULT; Schema: _timescaledb_internal; Owner: postgres
@@ -530,6 +544,13 @@ GRANT SELECT ON TABLE public.stations TO sauron;
 
 GRANT SELECT,INSERT,UPDATE ON TABLE public.watering_schedule TO controlcore_user;
 GRANT SELECT ON TABLE public.watering_schedule TO sauron;
+
+--
+-- Name: TABLE module_status; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT,UPDATE ON TABLE public.module_status TO controlcore_user;
+GRANT SELECT ON TABLE public.module_status TO sauron;
 
 
 --
