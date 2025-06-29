@@ -1,3 +1,5 @@
+import sys
+sys.path.append('.')
 import controlcore_ai.core.advisor as advisor
 advise_watering = advisor.advise_watering
 
