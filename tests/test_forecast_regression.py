@@ -3,7 +3,10 @@ sys.path.append('.')
 import math
 import pandas as pd
 import pytest
-from controlcore_ai.core.forecast_regression import calculate_error_metrics
+from controlcore_ai.core.forecast_regression import (
+    calculate_error_metrics,
+    calculate_error_by_lead,
+)
 
 
 def test_calculate_error_metrics():
@@ -19,3 +22,36 @@ def test_calculate_error_metrics_ignore_nan():
     metrics = calculate_error_metrics(df)
     assert metrics['mae'] == 0
     assert metrics['rmse'] == 0
+
+
+def test_timezone_merge_and_lead_metrics():
+    forecast_df = pd.DataFrame({
+        'forecast_time': [pd.Timestamp('2024-01-01T00:00Z')],
+        'snapshot_time': [pd.Timestamp('2023-12-31T18:00Z')],
+        'lat': [1.0],
+        'lon': [2.0],
+        'forecast_temp': [10],
+        'actual_temp': [12],
+        'lead_hours': [6],
+    })
+
+    hist_df = pd.DataFrame({
+        'ts': [pd.Timestamp('2024-01-01T00:00')],
+        'lat': [1.0],
+        'lon': [2.0],
+        'actual_temp': [12],
+    })
+    hist_df['ts'] = pd.to_datetime(hist_df['ts'], utc=True)
+
+    merged = pd.merge(
+        forecast_df,
+        hist_df,
+        left_on=['lat', 'lon', 'forecast_time'],
+        right_on=['lat', 'lon', 'ts'],
+        how='left',
+    )
+
+    assert merged['actual_temp_y'].iloc[0] == 12
+
+    grouped = calculate_error_by_lead(forecast_df)
+    assert 'mae' in grouped.columns and 'rmse' in grouped.columns
