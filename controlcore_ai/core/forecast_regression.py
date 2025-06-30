@@ -148,8 +148,14 @@ def _fetch_data(days: int) -> pd.DataFrame:
 def run_forecast_regression(days: int = 1, store: bool = False) -> pd.DataFrame:
     """Run forecast regression for the last `days` days."""
     df = _fetch_data(days)
+    if not df.empty:
+        # ignore future forecasts or rows without an observed temperature
+        now = datetime.now(timezone.utc)
+        df = df[df["forecast_time"] <= now]
+        df = df.dropna(subset=["actual_temp"])
+
     metrics = calculate_error_metrics(df)
-    lead_metrics = calculate_error_by_lead(df)
+    lead_metrics = calculate_error_by_lead(df) if not df.empty else pd.DataFrame()
 
     if store:
         run_time = datetime.now(timezone.utc)
@@ -166,6 +172,7 @@ def run_forecast_regression(days: int = 1, store: bool = False) -> pd.DataFrame:
                 )
                 cur.execute(
                     "INSERT INTO forecast_accuracy (run_time, mae, rmse) VALUES (%s, %s, %s) ON CONFLICT (run_time) DO NOTHING",
+                    (datetime.now(timezone.utc), metrics["mae"], metrics["rmse"]),
                     (run_time, metrics["mae"], metrics["rmse"]),
                 )
 
@@ -197,8 +204,13 @@ def main():
 
     df = run_forecast_regression(args.days, args.store)
     metrics = calculate_error_metrics(df)
-    print(f"MAE: {metrics['mae']:.2f}\nRMSE: {metrics['rmse']:.2f}")
-    update_status("forecast_regression", "completed", metrics)
+    if math.isnan(metrics["mae"]):
+        print("MAE: NaN\nRMSE: NaN")
+        details = {}
+    else:
+        print(f"MAE: {metrics['mae']:.2f}\nRMSE: {metrics['rmse']:.2f}")
+        details = metrics
+    update_status("forecast_regression", "completed", details)
 
 
 if __name__ == "__main__":
