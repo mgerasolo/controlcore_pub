@@ -58,7 +58,6 @@ def test_timezone_merge_and_lead_metrics():
     grouped = calculate_error_by_lead(forecast_df)
     assert 'mae' in grouped.columns and 'rmse' in grouped.columns
 
-
 def test_run_forecast_regression_filters_future(monkeypatch):
     now = pd.Timestamp(datetime.now(timezone.utc))
     future = now + pd.Timedelta(hours=1)
@@ -78,3 +77,4 @@ def test_run_forecast_regression_filters_future(monkeypatch):
 
     assert len(result_df) == 1
     assert result_df['forecast_time'].max() <= now
+

@@ -172,6 +172,7 @@ def run_forecast_regression(days: int = 1, store: bool = False) -> pd.DataFrame:
                 )
                 cur.execute(
                     "INSERT INTO forecast_accuracy (run_time, mae, rmse) VALUES (%s, %s, %s) ON CONFLICT (run_time) DO NOTHING",
+                    (datetime.now(timezone.utc), metrics["mae"], metrics["rmse"]),
                     (run_time, metrics["mae"], metrics["rmse"]),
                 )
 
