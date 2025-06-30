@@ -90,6 +90,7 @@ def _fetch_data(days: int) -> pd.DataFrame:
     with psycopg2.connect(DB_DSN_CONTROLCORE) as conn:
         with conn.cursor() as cur:
             sensor_vals: list[Optional[float]] = []
+            merged.rename(columns={"lat_x": "lat", "lon_x": "lon"}, inplace=True)
             for ts, lat, lon in merged[["forecast_time", "lat", "lon"]].itertuples(index=False):
                 cur.execute(
                     """
