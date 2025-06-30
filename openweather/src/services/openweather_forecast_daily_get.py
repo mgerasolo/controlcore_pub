@@ -39,7 +39,7 @@ class OpenWeatherDailyForecast:
                 'lat': self.latitude,
                 'lon': self.longitude,
                 'appid': self.api_key,
-                'units': 'imperial'
+                'units': 'metric'
             }
 
             max_retries = 3  # Maximum number of retries
