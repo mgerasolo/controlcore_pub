@@ -30,6 +30,28 @@ def calculate_error_metrics(df: pd.DataFrame, observed_col: str = "actual_temp")
     return {"mae": mae, "rmse": rmse}
 
 
+def calculate_error_by_lead(df: pd.DataFrame, bins: list[int] | None = None) -> pd.DataFrame:
+    """Return MAE/RMSE grouped by lead time in hours."""
+    if "lead_hours" not in df:
+        raise KeyError("lead_hours column missing")
+
+    work = df.dropna(subset=["lead_hours"])
+    if bins is not None:
+        work = work.copy()
+        work["lead_group"] = pd.cut(work["lead_hours"], bins=bins, right=False)
+        groups = work.groupby("lead_group")
+        key_name = "lead_group"
+    else:
+        groups = work.groupby("lead_hours")
+        key_name = "lead_hours"
+
+    records = []
+    for key, grp in groups:
+        metrics = calculate_error_metrics(grp)
+        records.append({key_name: key, **metrics})
+    return pd.DataFrame(records)
+
+
 def _fetch_data(days: int) -> pd.DataFrame:
     """Fetch forecast, historical and sensor data for the last `days` days."""
     start_time = datetime.now(timezone.utc) - timedelta(days=days)
@@ -52,11 +74,18 @@ def _fetch_data(days: int) -> pd.DataFrame:
                 ts_values = rest[:24]
                 temp_values = rest[24:]
                 for ts, temp in zip(ts_values, temp_values):
-                    forecast_rows.append((ts, lat, lon, temp))
+                    forecast_rows.append((ts, base_ts, lat, lon, temp))
 
-    df = pd.DataFrame(forecast_rows, columns=["forecast_time", "lat", "lon", "forecast_temp"])
+    df = pd.DataFrame(
+        forecast_rows,
+        columns=["forecast_time", "snapshot_time", "lat", "lon", "forecast_temp"],
+    )
     if df.empty:
         return df
+
+    df["lead_hours"] = (
+        df["forecast_time"] - df["snapshot_time"]
+    ).dt.total_seconds() / 3600
 
     # Fetch historical temperatures
     min_time = df["forecast_time"].min() - timedelta(hours=1)
@@ -74,6 +103,7 @@ def _fetch_data(days: int) -> pd.DataFrame:
             )
             hist = cur.fetchall()
     hist_df = pd.DataFrame(hist, columns=["ts", "lat", "lon", "actual_temp"])
+    hist_df["ts"] = pd.to_datetime(hist_df["ts"], utc=True)
 
     df["lat_r"] = df["lat"].round(4)
     df["lon_r"] = df["lon"].round(4)
@@ -119,8 +149,10 @@ def run_forecast_regression(days: int = 1, store: bool = False) -> pd.DataFrame:
     """Run forecast regression for the last `days` days."""
     df = _fetch_data(days)
     metrics = calculate_error_metrics(df)
+    lead_metrics = calculate_error_by_lead(df)
 
     if store:
+        run_time = datetime.now(timezone.utc)
         with psycopg2.connect(DB_DSN_FORECAST) as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -134,8 +166,24 @@ def run_forecast_regression(days: int = 1, store: bool = False) -> pd.DataFrame:
                 )
                 cur.execute(
                     "INSERT INTO forecast_accuracy (run_time, mae, rmse) VALUES (%s, %s, %s) ON CONFLICT (run_time) DO NOTHING",
-                    (datetime.now(timezone.utc), metrics["mae"], metrics["rmse"]),
+                    (run_time, metrics["mae"], metrics["rmse"]),
                 )
+
+                cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS forecast_accuracy_lead (
+                        run_time timestamptz,
+                        lead_hours double precision,
+                        mae double precision,
+                        rmse double precision
+                    )
+                    """
+                )
+                for _, row in lead_metrics.iterrows():
+                    cur.execute(
+                        "INSERT INTO forecast_accuracy_lead (run_time, lead_hours, mae, rmse) VALUES (%s, %s, %s, %s)",
+                        (run_time, float(row.get('lead_hours', row[0])), row['mae'], row['rmse']),
+                    )
     return df
 
 

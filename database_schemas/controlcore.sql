@@ -292,6 +292,35 @@ ALTER TABLE public.module_status OWNER TO postgres;
 
 
 --
+-- Name: forecast_accuracy; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.forecast_accuracy (
+    run_time timestamp with time zone PRIMARY KEY,
+    mae double precision,
+    rmse double precision
+);
+
+
+ALTER TABLE public.forecast_accuracy OWNER TO postgres;
+
+
+--
+-- Name: forecast_accuracy_lead; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.forecast_accuracy_lead (
+    run_time timestamp with time zone,
+    lead_hours double precision,
+    mae double precision,
+    rmse double precision
+);
+
+
+ALTER TABLE public.forecast_accuracy_lead OWNER TO postgres;
+
+
+--
 -- Name: _hyper_2_18_chunk received_at; Type: DEFAULT; Schema: _timescaledb_internal; Owner: postgres
 --
 
@@ -551,6 +580,22 @@ GRANT SELECT ON TABLE public.watering_schedule TO sauron;
 
 GRANT SELECT,INSERT,UPDATE ON TABLE public.module_status TO controlcore_user;
 GRANT SELECT ON TABLE public.module_status TO sauron;
+
+
+--
+-- Name: TABLE forecast_accuracy; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT,UPDATE ON TABLE public.forecast_accuracy TO controlcore_user;
+GRANT SELECT ON TABLE public.forecast_accuracy TO sauron;
+
+
+--
+-- Name: TABLE forecast_accuracy_lead; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT,UPDATE ON TABLE public.forecast_accuracy_lead TO controlcore_user;
+GRANT SELECT ON TABLE public.forecast_accuracy_lead TO sauron;
 
 
 --

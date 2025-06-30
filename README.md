@@ -26,6 +26,8 @@ Use the environment variables `ADVISOR_INTERVAL_MINUTES` and
 `FORECAST_REGRESSION_INTERVAL_MINUTES` or pass `--advisor-interval` and
 `--forecast-interval` to adjust timings.
 
+See [docs/forecast_accuracy.md](docs/forecast_accuracy.md) for details on the forecast regression workflow.
+
 ## Short Term Goals
 
 - Enable unified testing and Codex-assisted review
