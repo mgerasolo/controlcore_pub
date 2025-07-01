@@ -8,10 +8,10 @@ export async function POST() {
     const token = cookieStore.get("auth-token")?.value
     if (token) {
       await deleteSession(token)
-      cookieStore.delete("auth-token")
     }
-
-    return NextResponse.json({ success: true })
+    const response = NextResponse.json({ success: true })
+    response.cookies.delete("auth-token", { path: "/" })
+    return response
   } catch (error) {
     console.error("Sign out error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
