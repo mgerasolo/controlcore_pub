@@ -23,7 +23,7 @@ export default function SettingsPage() {
           credentials: "include",
         })
         const data = await res.json()
-        setUser(data)
+        setUser(data.success ? data.user : null)
       } catch (error) {
         console.error("Failed to fetch user session:", error)
       }

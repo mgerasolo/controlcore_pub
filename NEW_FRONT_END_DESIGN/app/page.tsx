@@ -36,8 +36,8 @@ export default function HomePage() {
         const res = await fetch("/api/auth/session", {
           credentials: "include",
         })
-        const currentUser = await res.json()
-        setUser(currentUser)
+        const data = await res.json()
+        setUser(data.success ? data.user : null)
       } catch (error) {
         console.error("Auth check failed:", error)
       } finally {

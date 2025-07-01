@@ -21,7 +21,8 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/auth/session", { credentials: "include" })
-        const currentUser = await res.json()
+        const data = await res.json()
+        const currentUser = data.success ? data.user : null
         setUser(currentUser)
 
         if (requireAuth && !currentUser) {
