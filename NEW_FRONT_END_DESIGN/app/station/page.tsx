@@ -177,9 +177,9 @@ export default function StationPage() {
 
                   {/* Last Update */}
                   <div className="text-xs text-muted-foreground pt-2">
-                    const displayTime = station.lastUpdate
+                    {station.lastUpdate
                       ? new Date(station.lastUpdate).toLocaleTimeString()
-                      : 'N/A'
+                      : 'N/A'}
                   </div>
                 </CardContent>
               </Card>
