@@ -19,11 +19,25 @@ export function DemoModeToggle({ isDemoMode, onToggle, className }: DemoModeTogg
   const handleToggle = async (enabled: boolean) => {
     setIsToggling(true)
 
-    // Simulate API call to update user preference
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const res = await fetch("/api/user/demo-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ demo_mode: enabled }),
+      })
 
-    onToggle(enabled)
-    setIsToggling(false)
+      const data = await res.json()
+      if (data.success) {
+        onToggle(enabled)
+      } else {
+        console.error("Failed to update demo mode:", data.error)
+      }
+    } catch (err) {
+      console.error("Error updating demo mode:", err)
+    } finally {
+      setIsToggling(false)
+    }
   }
 
   return (
