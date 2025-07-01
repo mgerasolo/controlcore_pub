@@ -9,7 +9,7 @@ export interface Sensor {
   unit: string | null
   pin: number | null
   source_id: string
-  timestamp: number
+  timestamp: Date
 }
 
 export interface StationData {
@@ -58,6 +58,7 @@ export async function fetchStations(): Promise<StationData[]> {
   for (const s of sensors) {
     const station = stationMap[s.station_id]
     if (!station) continue
+    const timestamp = new Date(Number(s.timestamp))
     station.sensors.push({
       station_id: s.station_id,
       controller_id: s.controller_id,
@@ -67,7 +68,7 @@ export async function fetchStations(): Promise<StationData[]> {
       unit: s.unit,
       pin: s.pin,
       source_id: s.source_id,
-      timestamp: s.timestamp,
+      timestamp,
     })
   }
 
