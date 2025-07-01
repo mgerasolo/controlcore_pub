@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { mqttClient } from "@/lib/mqttClient"
+import type { SensorReading } from "@/types/station"
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -120,42 +122,31 @@ export default function StationsPage() {
     }
 
     fetchStations()
+  }, [])
 
-    // Simulate real-time MQTT messages every 3 seconds
-    const interval = setInterval(() => {
-      if (isSubscribed) {
-        const mockMessage: MQTTMessage = {
-          id: Date.now().toString(),
-          topic: `controlcore/data/garden-hydrant/uno-r4-wifi-primary/water-pressure/BeetsTomatoes-Foush`,
-          payload: JSON.stringify({
-            sensor_id: "BeetsTomatoes-Foush",
-            sensor_type: "water-pressure",
-            value: 105 + Math.random() * 10,
-            unit: "PSI",
-            pin: 14,
-            timestamp: Date.now(),
-            source_id: "excessus-home_garden-hydrant_uno-r4-wifi-primary_water-pressure_BeetsTomatoes-Foush",
-          }),
-          timestamp: new Date(),
-          qos: 0,
-          retained: false,
-        }
+  useEffect(() => {
+    if (!isSubscribed) return
 
-        setMqttMessages((prev) => [mockMessage, ...prev.slice(0, 49)]) // Keep last 50 messages
-
-        // Update realtime data for charts
-        setRealtimeData((prev) => {
-          const key = "water-pressure"
-          const newData = [...(prev[key] || []), 105 + Math.random() * 10]
-          return {
-            ...prev,
-            [key]: newData.slice(-20), // Keep last 20 points (1 minute at 3-second intervals)
-          }
-        })
+    const unsubscribe = mqttClient.subscribe((reading: SensorReading) => {
+      const message: MQTTMessage = {
+        id: Date.now().toString(),
+        topic: `controlcore/data/${reading.station}/${reading.controller}/${reading.sensor_type}/${reading.sensor_id}`,
+        payload: JSON.stringify(reading),
+        timestamp: reading.timestamp,
+        qos: 0,
+        retained: false,
       }
-    }, 3000)
 
-    return () => clearInterval(interval)
+      setMqttMessages((prev) => [message, ...prev.slice(0, 49)])
+
+      setRealtimeData((prev) => {
+        const key = reading.sensor_type
+        const newData = [...(prev[key] || []), reading.value]
+        return { ...prev, [key]: newData.slice(-20) }
+      })
+    })
+
+    return () => unsubscribe()
   }, [isSubscribed])
 
   const handleSubscribe = () => {
