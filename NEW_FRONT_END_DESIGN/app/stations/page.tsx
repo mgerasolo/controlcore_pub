@@ -174,7 +174,7 @@ export default function StationsPage() {
     }
   }
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!publishTopic || !publishPayload) return
 
     const message: MQTTMessage = {
@@ -187,10 +187,19 @@ export default function StationsPage() {
     }
 
     setMqttMessages((prev) => [message, ...prev])
+    try {
+      await fetch("/api/mqtt/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: publishTopic, payload: publishPayload }),
+      })
+    } catch (err) {
+      console.error("Publish failed", err)
+    }
     console.log("Published:", message)
   }
 
-  const handleQuickButton = (button: QuickButton) => {
+  const handleQuickButton = async (button: QuickButton) => {
     const message: MQTTMessage = {
       id: Date.now().toString(),
       topic: button.topic,
@@ -201,6 +210,15 @@ export default function StationsPage() {
     }
 
     setMqttMessages((prev) => [message, ...prev])
+    try {
+      await fetch("/api/mqtt/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: button.topic, payload: button.payload }),
+      })
+    } catch (err) {
+      console.error("Quick action publish failed", err)
+    }
     console.log("Quick action:", button.name, message)
   }
 
