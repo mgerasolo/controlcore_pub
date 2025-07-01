@@ -48,7 +48,7 @@ Each reading includes two identifiers:
 
 Use dot_env
 
-Install dependencies with `pip install -r python/requirements.txt`.
+Install dependencies with `pip install -r ../requirements.txt`.
 
 ### Arduino Station Layout
 

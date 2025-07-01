@@ -172,7 +172,7 @@ pnpm install
 pnpm dev  # Start local dev server
 ```
 ```bash
-pip install -r python/requirements.txt
+pip install -r ../requirements.txt
 SENSOR_DB_URL="postgresql://controlcore_user:secret@localhost/controlcore" \
   MQTT_HOST=localhost python python/src/services/cc_data_manager.py
 ```
