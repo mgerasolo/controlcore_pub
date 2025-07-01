@@ -478,7 +478,13 @@ export default function StationsPage() {
                                 </span>
                               </div>
                               <pre className="text-xs bg-background p-2 rounded overflow-x-auto">
-                                {JSON.stringify(JSON.parse(message.payload || "{}"), null, 2)}
+                                {(() => {
+                                  try {
+                                    return JSON.stringify(JSON.parse(message.payload), null, 2);
+                                  } catch {
+                                    return message.payload;
+                                  }
+                                })()}
                               </pre>
                             </div>
                           ))}
