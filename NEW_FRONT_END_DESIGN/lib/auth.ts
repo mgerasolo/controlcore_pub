@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs"
 import { SignJWT, jwtVerify } from "jose"
 import pool from "./db"
 
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000
+
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key")
 
 export interface User {
@@ -18,6 +20,20 @@ export interface AuthResult {
   success: boolean
   user?: User
   error?: string
+}
+
+export async function createSession(user: User): Promise<string> {
+  const token = await createJWT(user)
+  const expires = new Date(Date.now() + SESSION_DURATION_MS)
+  await pool.query(
+    "INSERT INTO user_sessions (user_id, session_token, expires_at) VALUES ($1, $2, $3)",
+    [user.id, token, expires],
+  )
+  return token
+}
+
+export async function deleteSession(token: string): Promise<void> {
+  await pool.query("DELETE FROM user_sessions WHERE session_token = $1", [token])
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -44,6 +60,13 @@ export async function createJWT(user: User): Promise<string> {
 export async function verifyJWT(token: string): Promise<User | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
+    const sessionCheck = await pool.query(
+      "SELECT user_id FROM user_sessions WHERE session_token = $1 AND expires_at > NOW()",
+      [token],
+    )
+    if (sessionCheck.rows.length === 0 || sessionCheck.rows[0].user_id !== payload.userId) {
+      return null
+    }
     const { rows } = await pool.query(
       "SELECT id, email, first_name, last_name, role, demo_mode, is_active FROM users WHERE id = $1",
       [payload.userId],
@@ -83,7 +106,6 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   if (!user.is_active) {
     return { success: false, error: "Account is deactivated" }
   }
-
   return {
     success: true,
     user: {
