@@ -5,7 +5,6 @@ import { Navigation } from "@/components/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, Palette, TestTube } from "lucide-react"
-import { getCurrentUser } from "@/lib/auth"
 import { ThemeSelector } from "@/components/theme-selector"
 import { DemoModeToggle } from "@/components/demo-mode-toggle"
 import { useControlCoreTheme } from "@/components/theme-provider"
@@ -13,23 +12,24 @@ import { getTheme } from "@/lib/themes"
 
 export default function SettingsPage() {
   const [user, setUser] = useState(null)
-  const [demoMode, setDemoMode] = useState(true)
   const { themeMode } = useControlCoreTheme()
   const theme = getTheme(themeMode)
 
+
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchUser = async () => {
       try {
-        const currentUser = await getCurrentUser()
-        setUser(currentUser)
-        if (currentUser) {
-          setDemoMode(currentUser.demoMode)
-        }
+        const res = await fetch("/api/auth/session", {
+          credentials: "include",
+        })
+        const data = await res.json()
+        setUser(data)
       } catch (error) {
-        console.error("Auth check failed:", error)
+        console.error("Failed to fetch user session:", error)
       }
     }
-    checkAuth()
+
+    fetchUser()
   }, [])
 
   const handleDemoModeToggle = (enabled) => {

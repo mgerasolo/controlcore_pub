@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Home, Activity, Brain, BarChart3, Settings, Droplets, Cloud, Calendar, Zap, TestTube } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { getCurrentUser, type User } from "@/lib/auth"
+import type { User } from "@/lib/types"
 import { useEffect, useState } from "react"
 
 const navigation = [
@@ -27,14 +27,16 @@ export function Navigation() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = await getCurrentUser()
-        setUser(currentUser)
-      } catch (error) {
-        console.error("Auth check failed:", error)
+        const res = await fetch("/api/auth/session", { credentials: "include" });
+        const userData = await res.json();
+        setUser(userData);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
       }
-    }
-    checkAuth()
-  }, [])
+    };
+
+    checkAuth();
+  }, []);
 
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">

@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getCurrentUser, type User } from "@/lib/auth"
+import type { User } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 
 interface AuthGuardProps {
@@ -20,7 +20,8 @@ export function AuthGuard({ children, requireAuth = true }: AuthGuardProps) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = await getCurrentUser()
+        const res = await fetch("/api/auth/session", { credentials: "include" })
+        const currentUser = await res.json()
         setUser(currentUser)
 
         if (requireAuth && !currentUser) {

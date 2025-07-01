@@ -21,7 +21,6 @@ import {
   Cloud,
 } from "lucide-react"
 import { Navigation } from "@/components/navigation"
-import { getCurrentUser, type User } from "@/lib/auth"
 import { useControlCoreTheme } from "@/components/theme-provider"
 import { getTheme } from "@/lib/themes"
 
@@ -34,7 +33,10 @@ export default function HomePage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const currentUser = await getCurrentUser()
+        const res = await fetch("/api/auth/session", {
+          credentials: "include",
+        })
+        const currentUser = await res.json()
         setUser(currentUser)
       } catch (error) {
         console.error("Auth check failed:", error)
