@@ -1,7 +1,7 @@
 import sys
 sys.path.append('.')
 
-from datetime import datetime
+from datetime import datetime, timezone
 from station_viewer.python.src.services.cc_data_manager import (
     resolve_timestamp,
     insert_sensor_data,
@@ -12,13 +12,14 @@ import psycopg2
 
 def test_resolve_timestamp_valid():
     ts = 1700000000
-    expected = datetime.utcfromtimestamp(ts)
+    expected = datetime.fromtimestamp(ts, tz=timezone.utc)
     assert resolve_timestamp(ts) == expected
 
 
 def test_resolve_timestamp_invalid():
     result = resolve_timestamp("notatime")
     assert isinstance(result, datetime)
+    assert result.tzinfo == timezone.utc
 
 
 class DummyCursor:

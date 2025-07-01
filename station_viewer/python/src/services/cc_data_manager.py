@@ -1,7 +1,7 @@
 import json
 import psycopg2
 import paho.mqtt.client as mqtt
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import os
 from shared import load_environment, build_dsn_from_env
@@ -68,10 +68,13 @@ def resolve_timestamp(ts):
         ts_float = float(ts)
         if ts_float < 1600000000:  # Before ~2020 — likely bogus
             raise ValueError("Invalid epoch timestamp")
-        return datetime.utcfromtimestamp(ts_float)
+        return datetime.fromtimestamp(ts_float, tz=timezone.utc)
     except Exception:
-        log(f"⚠️ Substituting current UTC timestamp for bad input: {ts}", level="warning")
-        return datetime.utcnow()
+        log(
+            f"⚠️ Substituting current UTC timestamp for bad input: {ts}",
+            level="warning",
+        )
+        return datetime.now(timezone.utc)
 
 
 def insert_sensor_data(payload):

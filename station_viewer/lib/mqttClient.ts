@@ -15,9 +15,8 @@ class MQTTClient {
   }
 
   private initializeClient() {
-    this.client = mqtt.connect("ws://192.168.100.60:9001", {
-      reconnectPeriod: 1000,
-    })
+    const url = process.env.NEXT_PUBLIC_MQTT_WS_URL || "ws://localhost:9001"
+    this.client = mqtt.connect(url, { reconnectPeriod: 1000 })
 
     this.client.on("connect", () => {
       console.log("[MQTT] Connected to broker")
