@@ -32,3 +32,5 @@ __pycache__/
 NEW_FRONT_END_DESIGN/node_modules/
 NEW_FRONT_END_DESIGN/.next/
 
+
+app/api/auth/session/route.ts_bak
