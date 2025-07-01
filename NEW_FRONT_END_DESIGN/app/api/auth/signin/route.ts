@@ -31,7 +31,6 @@ export async function POST(request: NextRequest) {
       sameSite: "lax",
       maxAge: 60 * 60 * 24,
       path: "/",
-      credentials: "include"
     })
 
     return response
