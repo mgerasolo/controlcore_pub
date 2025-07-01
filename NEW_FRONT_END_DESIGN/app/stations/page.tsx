@@ -104,82 +104,22 @@ export default function StationsPage() {
   const [realtimeData, setRealtimeData] = useState<{ [key: string]: number[] }>({})
 
   useEffect(() => {
-    // Mock data based on your MQTT structure
-    const mockStations: StationData[] = [
-      {
-        station: "garden-hydrant",
-        controller_id: "uno-r4-wifi-primary",
-        status: "online",
-        sensors: [
-          {
-            sensor_id: "BeetsTomatoes-USSolid",
-            sensor_type: "valve-state",
-            value: 0,
-            unit: "state",
-            pin: -1,
-            timestamp: Date.now() - 3000,
-            source_id: "excessus-home_garden-hydrant_uno-r4-wifi-primary_valve-state_BeetsTomatoes-USSolid",
-          },
-          {
-            sensor_id: "BeetsTomatoes-Foush",
-            sensor_type: "water-pressure",
-            value: 106,
-            unit: "PSI",
-            pin: 14,
-            timestamp: Date.now() - 3000,
-            source_id: "excessus-home_garden-hydrant_uno-r4-wifi-primary_water-pressure_BeetsTomatoes-Foush",
-          },
-          {
-            sensor_id: "BeetsTomatoes-Grieda",
-            sensor_type: "water-flow",
-            value: 765,
-            unit: "L/min",
-            timestamp: Date.now() - 3000,
-            pin: 2,
-            source_id: "excessus-home_garden-hydrant_uno-r4-wifi-primary_water-flow_BeetsTomatoes-Grieda",
-          },
-        ],
-        lastUpdate: new Date(Date.now() - 3000),
-      },
-      {
-        station: "greenhouse-zone",
-        controller_id: "esp32-greenhouse",
-        status: "maintenance",
-        sensors: [
-          {
-            sensor_id: "TomatoZone-TempSensor",
-            sensor_type: "temperature",
-            value: 24.5,
-            unit: "°C",
-            pin: 4,
-            timestamp: Date.now() - 15000,
-            source_id: "excessus-home_greenhouse-zone_esp32-greenhouse_temperature_TomatoZone-TempSensor",
-          },
-          {
-            sensor_id: "TomatoZone-HumiditySensor",
-            sensor_type: "humidity",
-            value: 72,
-            unit: "%",
-            pin: 5,
-            timestamp: Date.now() - 15000,
-            source_id: "excessus-home_greenhouse-zone_esp32-greenhouse_humidity_TomatoZone-HumiditySensor",
-          },
-        ],
-        lastUpdate: new Date(Date.now() - 15000),
-      },
-      {
-        station: "north-field",
-        controller_id: "arduino-field-01",
-        status: "offline",
-        sensors: [],
-        lastUpdate: new Date(Date.now() - 900000),
-      },
-    ]
-
-    setStations(mockStations)
-    if (mockStations.length > 0) {
-      setSelectedStation(mockStations[0].station)
+    async function fetchStations() {
+      try {
+        const res = await fetch("/api/stations")
+        const data = await res.json()
+        if (data.success) {
+          setStations(data.stations)
+          if (data.stations.length > 0) {
+            setSelectedStation(data.stations[0].station)
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch stations", err)
+      }
     }
+
+    fetchStations()
 
     // Simulate real-time MQTT messages every 3 seconds
     const interval = setInterval(() => {

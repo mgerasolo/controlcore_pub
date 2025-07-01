@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { signIn, createJWT } from "@/lib/auth"
+import { signIn, createSession } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result, { status: 401 })
     }
 
-    // Create JWT token
-    const token = await createJWT(result.user)
+    // Create JWT token and persist session
+    const token = await createSession(result.user)
 
     // Set HTTP-only cookie
     const cookieStore = await cookies()
