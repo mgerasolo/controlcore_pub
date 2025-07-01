@@ -13,7 +13,17 @@ import psycopg2
 def test_resolve_timestamp_valid():
     ts = 1700000000
     expected = datetime.fromtimestamp(ts, tz=timezone.utc)
-    assert resolve_timestamp(ts) == expected
+    result = resolve_timestamp(ts)
+    assert result == expected
+    assert result.tzinfo == timezone.utc
+
+
+def test_resolve_timestamp_milliseconds():
+    ts = 1700000000000  # milliseconds
+    expected = datetime.fromtimestamp(ts / 1000, tz=timezone.utc)
+    result = resolve_timestamp(ts)
+    assert result == expected
+    assert result.tzinfo == timezone.utc
 
 
 def test_resolve_timestamp_invalid():

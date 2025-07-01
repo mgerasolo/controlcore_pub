@@ -66,6 +66,8 @@ def log(msg, level="info"):
 def resolve_timestamp(ts):
     try:
         ts_float = float(ts)
+        if ts_float > 1e12:
+            ts_float /= 1000.0
         if ts_float < 1600000000:  # Before ~2020 — likely bogus
             raise ValueError("Invalid epoch timestamp")
         return datetime.fromtimestamp(ts_float, tz=timezone.utc)
