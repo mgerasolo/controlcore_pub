@@ -9,8 +9,9 @@ This repo unifies three primary applications under the ControlCore irrigation an
 ## Configuration
 
 Copy `.env.example` to `.env` and provide real values for the database and MQTT
-settings used by all modules.  Install the Python dependencies with
-`pip install -r requirements.txt` after creating your virtual environment.
+settings used by all modules. Set `NEXT_PUBLIC_MQTT_WS_URL` to the WebSocket URL
+for your broker (e.g. `ws://localhost:9001`). Install the Python dependencies
+with `pip install -r requirements.txt` after creating your virtual environment.
 
 ## Planned Structure
 
