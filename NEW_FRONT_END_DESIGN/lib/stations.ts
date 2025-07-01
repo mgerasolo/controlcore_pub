@@ -35,7 +35,7 @@ export async function fetchStations(): Promise<StationData[]> {
       unit,
       pin,
       source_id,
-      EXTRACT(EPOCH FROM received_at) * 1000 AS timestamp
+      EXTRACT(EPOCH FROM received_at) * 1000::bigint AS timestamp
     FROM sensor_data
     ORDER BY station_id, controller_id, sensor_id, sensor_type, received_at DESC
   `)

@@ -30,6 +30,18 @@ import {
   RefreshCw,
 } from "lucide-react"
 
+function getTimestamp(t: number | Date | string): number {
+  if (typeof t === "number") return t
+  if (typeof t === "string") {
+    const parsed = new Date(t)
+    const time = parsed.getTime()
+    return isNaN(time) ? 0 : time
+  }
+  const time = t.getTime?.()
+  return isNaN(time) ? 0 : time
+}
+
+
 interface SensorData {
   sensor_id: string
   sensor_type: string
@@ -400,8 +412,10 @@ export default function StationsPage() {
                       {station.sensors.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {station.sensors.map((sensor) => {
-                            const isStale = Date.now() - sensor.timestamp > 15000 // 15 seconds
-                            const age = Math.floor((Date.now() - sensor.timestamp) / 1000)
+                            const now = Date.now()
+                            const timestamp = getTimestamp(sensor.timestamp)
+                            const isStale = now - timestamp > 15000 // 15 seconds
+                            const age = Math.floor((now - timestamp) / 1000)
                             return (
                               <Card
                                 key={sensor.sensor_id}
