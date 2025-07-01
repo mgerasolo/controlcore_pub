@@ -428,7 +428,7 @@ export default function StationsPage() {
                                       <span className="font-medium text-sm">{sensor.sensor_id}</span>
                                     </div>
                                     <Badge variant={isStale ? "secondary" : "default"} className="text-xs">
-                                      {age}s ago
+                                      {Math.max(age, 0)}s ago
                                     </Badge>
                                   </div>
                                   <div className="space-y-2">
