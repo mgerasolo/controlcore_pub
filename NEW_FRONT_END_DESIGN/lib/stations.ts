@@ -26,7 +26,7 @@ export async function fetchStations(): Promise<StationData[]> {
   )
 
   const { rows: sensors } = await pool.query(`
-    SELECT DISTINCT ON (station_id, controller_id, sensor_id)
+    SELECT DISTINCT ON (station_id, controller_id, sensor_id, sensor_type)
       station_id,
       controller_id,
       sensor_id,
@@ -37,7 +37,7 @@ export async function fetchStations(): Promise<StationData[]> {
       source_id,
       EXTRACT(EPOCH FROM received_at) * 1000 AS timestamp
     FROM sensor_data
-    ORDER BY station_id, controller_id, sensor_id, received_at DESC
+    ORDER BY station_id, controller_id, sensor_id, sensor_type, received_at DESC
   `)
 
   const stationMap: Record<string, StationData> = {}

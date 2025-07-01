@@ -111,9 +111,13 @@ export default function StationsPage() {
         const res = await fetch("/api/stations")
         const data = await res.json()
         if (data.success) {
-          setStations(data.stations)
-          if (data.stations.length > 0) {
-            setSelectedStation(data.stations[0].station)
+          const normalized = data.stations.map((s: any) => ({
+            ...s,
+            lastUpdate: s.lastUpdate ? new Date(s.lastUpdate) : null,
+          }))
+          setStations(normalized)
+          if (normalized.length > 0) {
+            setSelectedStation(normalized[0].station)
           }
         }
       } catch (err) {
@@ -123,6 +127,7 @@ export default function StationsPage() {
 
     fetchStations()
   }, [])
+
 
   useEffect(() => {
     if (!isSubscribed) return
