@@ -29,11 +29,35 @@ export async function createSession(user: User): Promise<string> {
     "INSERT INTO user_sessions (user_id, session_token, expires_at) VALUES ($1, $2, $3)",
     [user.id, token, expires],
   )
+  await pool.query(
+    "UPDATE users SET last_login = NOW() WHERE id = $1",
+    [user.id],
+  )
+
+  await pool.query(
+    "INSERT INTO session_logs (user_id, action, session_token) VALUES ($1, 'login', $2)",
+    [user.id, token]
+  )
+
   return token
 }
 
 export async function deleteSession(token: string): Promise<void> {
+
+  // Find user_id before deletion
+  const { rows } = await pool.query(
+    "SELECT user_id FROM user_sessions WHERE session_token = $1",
+    [token]
+  )
+  const userId = rows[0]?.user_id
+
   await pool.query("DELETE FROM user_sessions WHERE session_token = $1", [token])
+
+  await pool.query(
+    "INSERT INTO session_logs (user_id, action, session_token) VALUES ($1, 'logout', $2)",
+    [userId, token]
+  )
+
 }
 
 export async function hashPassword(password: string): Promise<string> {
