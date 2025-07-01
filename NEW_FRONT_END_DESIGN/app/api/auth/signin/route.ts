@@ -20,19 +20,22 @@ export async function POST(request: NextRequest) {
     const token = await createSession(result.user)
 
     // Set HTTP-only cookie
-    const cookieStore = await cookies()
-    cookieStore.set("auth-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: "/",
-    })
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: result.user,
     })
+
+    response.cookies.set("auth-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+      credentials: "include"
+    })
+
+    return response
+
   } catch (error) {
     console.error("Sign in error:", error)
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 })
