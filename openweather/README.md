@@ -7,14 +7,14 @@ This is the public version of the OpenWeather application. It includes:
 
 ## Requirements
 - Python 3.11
-- Dependencies listed in `requirements.txt`
+- Dependencies listed in the repo-wide `../requirements.txt`
 
 ## Setting Up
 1. Clone the repository.
 2. Create and activate a virtual environment.
 3. Install dependencies using:
-   ```bash
-   pip install -r requirements.txt
+    ```bash
+    pip install -r ../requirements.txt
     ```
 
 You can store secrets in a `.env` file. The update script automatically loads
