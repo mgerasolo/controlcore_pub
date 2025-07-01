@@ -28,8 +28,8 @@ export function Navigation() {
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/auth/session", { credentials: "include" });
-        const userData = await res.json();
-        setUser(userData);
+        const data = await res.json();
+        setUser(data.success ? data.user : null);
       } catch (err) {
         console.error("Failed to fetch user:", err);
       }
