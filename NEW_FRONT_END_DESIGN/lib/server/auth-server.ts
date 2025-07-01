@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import pool from "../db";  // Adjust path if needed
 
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const encoder = new TextEncoder();
 
 export async function getCurrentUser() {
