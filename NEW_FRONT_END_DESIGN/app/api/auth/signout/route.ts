@@ -4,7 +4,7 @@ import { deleteSession } from "@/lib/auth"
 
 export async function POST() {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const token = cookieStore.get("auth-token")?.value
     if (token) {
       await deleteSession(token)
