@@ -12,6 +12,7 @@ import { getTheme } from "@/lib/themes"
 
 export default function SettingsPage() {
   const [user, setUser] = useState(null)
+  const [demoMode, setDemoMode] = useState(false)
   const { themeMode } = useControlCoreTheme()
   const theme = getTheme(themeMode)
 
@@ -32,10 +33,23 @@ export default function SettingsPage() {
     fetchUser()
   }, [])
 
-  const handleDemoModeToggle = (enabled) => {
+  useEffect(() => {
+    if (user) setDemoMode(user.demoMode)
+  }, [user])
+
+  const handleDemoModeToggle = async (enabled) => {
     setDemoMode(enabled)
-    // In real implementation, update user preference in database
-    console.log("Demo mode toggled:", enabled)
+
+    try {
+      await fetch("/api/user/demo-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+        credentials: "include",
+      })
+    } catch (error) {
+      console.error("Failed to update demo mode:", error)
+    }
   }
 
   return (
