@@ -1,4 +1,3 @@
-import { cookies } from "next/headers"
 import bcrypt from "bcryptjs"
 import { SignJWT, jwtVerify } from "jose"
 import pool from "./db"
@@ -64,15 +63,6 @@ export async function verifyJWT(token: string): Promise<User | null> {
   } catch {
     return null
   }
-}
-
-export async function getCurrentUser(): Promise<User | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("auth-token")?.value
-
-  if (!token) return null
-
-  return verifyJWT(token)
 }
 
 export async function signIn(email: string, password: string): Promise<AuthResult> {
