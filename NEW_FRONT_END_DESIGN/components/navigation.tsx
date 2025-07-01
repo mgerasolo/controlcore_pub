@@ -114,7 +114,7 @@ export function Navigation() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={async () => {
-                      await fetch("/api/auth/signout", { method: "POST" })
+                      await fetch("/api/auth/signout", { method: "POST", credentials: "include" })
                       window.location.href = "/"
                     }}
                   >
