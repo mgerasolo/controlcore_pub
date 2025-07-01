@@ -28,3 +28,11 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Environment Variables
+
+The front end expects the following variables in your `.env` file:
+
+- `NEXT_PUBLIC_MQTT_WS_URL` – WebSocket URL for the MQTT broker. Example: `ws://localhost:9001`.
+- `OPENHIST_USER` and `OPENHIST_PW` – credentials for the `openweather_historical` database.
+- `OPENFORE_USER` and `OPENFORE_PW` – credentials for the `openweather_forecast` database.
