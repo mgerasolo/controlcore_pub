@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Fragment } from "react"
 import { mqttClient } from "@/lib/mqttClient"
 import type { SensorReading } from "@/types/station"
 import { Navigation } from "@/components/navigation"
@@ -413,42 +413,60 @@ export default function StationsPage() {
                     <CardContent>
                       {station.sensors.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {station.sensors.map((sensor) => {
-                            const now = Date.now()
-                            const timestamp = getTimestamp(sensor.timestamp)
-                            const isStale = now - timestamp > 15000 // 15 seconds
-                            const age = Math.floor((now - timestamp) / 1000)
-                            return (
-                              <Card
-                                key={sensor.sensor_id}
-                                className={isStale ? "border-yellow-200 bg-yellow-50" : "border-green-200 bg-green-50"}
-                              >
-                                <CardContent className="p-4">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-lg">{getSensorIcon(sensor.sensor_type)}</span>
-                                      <span className="font-medium text-sm">{sensor.sensor_id}</span>
-                                    </div>
-                                    <Badge variant={isStale ? "secondary" : "default"} className="text-xs">
-                                      {Math.max(age, 0)}s ago
-                                    </Badge>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="text-2xl font-bold">
-                                      {sensor.value} {sensor.unit}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">Type: {sensor.sensor_type}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                      Pin: {sensor.pin >= 0 ? sensor.pin : "N/A"}
-                                    </div>
-                                    <div className="text-xs font-mono bg-muted p-1 rounded text-[10px]">
-                                      {sensor.source_id}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            )
-                          })}
+                          {Object.entries(
+                            [...station.sensors]
+                              .sort((a, b) =>
+                                a.sensor_type === b.sensor_type
+                                  ? a.sensor_id.localeCompare(b.sensor_id)
+                                  : a.sensor_type.localeCompare(b.sensor_type)
+                              )
+                              .reduce((acc: Record<string, SensorData[]>, s) => {
+                                (acc[s.sensor_type] ||= []).push(s)
+                                return acc
+                              }, {})
+                          ).map(([type, sensors]) => (
+                            <Fragment key={type}>
+                              <div className="col-span-full font-semibold text-sm mt-4">
+                                {type}
+                              </div>
+                              {sensors.map((sensor) => {
+                                const now = Date.now()
+                                const timestamp = getTimestamp(sensor.timestamp)
+                                const isStale = now - timestamp > 15000 // 15 seconds
+                                const age = Math.floor((now - timestamp) / 1000)
+                                return (
+                                  <Card
+                                    key={sensor.sensor_id}
+                                    className={isStale ? "border-yellow-200 bg-yellow-50" : "border-green-200 bg-green-50"}
+                                  >
+                                    <CardContent className="p-4">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-lg">{getSensorIcon(sensor.sensor_type)}</span>
+                                          <span className="font-medium text-sm">{sensor.sensor_id}</span>
+                                        </div>
+                                        <Badge variant={isStale ? "secondary" : "default"} className="text-xs">
+                                          {Math.max(age, 0)}s ago
+                                        </Badge>
+                                      </div>
+                                      <div className="space-y-2">
+                                        <div className="text-2xl font-bold">
+                                          {sensor.value} {sensor.unit}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">Type: {sensor.sensor_type}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                          Pin: {sensor.pin >= 0 ? sensor.pin : "N/A"}
+                                        </div>
+                                        <div className="text-xs font-mono bg-muted p-1 rounded text-[10px]">
+                                          {sensor.source_id}
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                )
+                              })}
+                            </Fragment>
+                          ))}
                         </div>
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
