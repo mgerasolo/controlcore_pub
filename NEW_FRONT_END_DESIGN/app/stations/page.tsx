@@ -130,6 +130,12 @@ export default function StationsPage() {
             ...s,
             lastUpdate: s.lastUpdate ? new Date(s.lastUpdate) : null,
           }))
+          normalized.sort((a: any, b: any) => {
+            if (!a.lastUpdate && !b.lastUpdate) return 0
+            if (!a.lastUpdate) return 1
+            if (!b.lastUpdate) return -1
+            return b.lastUpdate.getTime() - a.lastUpdate.getTime()
+          })
           setStations(normalized)
           if (normalized.length > 0) {
             setSelectedStation(normalized[0].station)
