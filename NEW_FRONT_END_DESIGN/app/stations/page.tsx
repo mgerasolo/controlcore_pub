@@ -30,6 +30,8 @@ import {
   RefreshCw,
 } from "lucide-react"
 
+export const STALE_THRESHOLD_MS = 5 * 60 * 1000
+
 function getTimestamp(t: number | Date | string): number {
   if (typeof t === "number") return t
   if (typeof t === "string") {
@@ -308,7 +310,11 @@ export default function StationsPage() {
                 })}
               </TabsList>
 
-              {stations.map((station) => (
+              {stations.map((station) => {
+                const freshSensors = station.sensors.filter(
+                  (s) => Date.now() - getTimestamp(s.timestamp) <= STALE_THRESHOLD_MS,
+                )
+                return (
                 <TabsContent key={station.station} value={station.station} className="space-y-6">
                   {/* Station Overview */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -333,7 +339,7 @@ export default function StationsPage() {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">Sensors</span>
-                            <span className="text-sm">{station.sensors.length} active</span>
+                            <span className="text-sm">{freshSensors.length} active</span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium">Last Update</span>
@@ -376,7 +382,7 @@ export default function StationsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-3">
-                          {station.sensors
+                          {freshSensors
                             .filter((s) => s.sensor_type === "valve-state")
                             .map((valve) => (
                               <div key={valve.sensor_id} className="space-y-2">
@@ -411,10 +417,10 @@ export default function StationsPage() {
                       <CardDescription>Real-time data from {station.station} (3-second intervals)</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {station.sensors.length > 0 ? (
+                      {freshSensors.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {Object.entries(
-                            [...station.sensors]
+                            [...freshSensors]
                               .sort((a, b) =>
                                 a.sensor_type === b.sensor_type
                                   ? a.sensor_id.localeCompare(b.sensor_id)
@@ -432,7 +438,7 @@ export default function StationsPage() {
                               {sensors.map((sensor) => {
                                 const now = Date.now()
                                 const timestamp = getTimestamp(sensor.timestamp)
-                                const isStale = now - timestamp > 15000 // 15 seconds
+                                const isStale = now - timestamp > STALE_THRESHOLD_MS
                                 const age = Math.floor((now - timestamp) / 1000)
                                 return (
                                   <Card

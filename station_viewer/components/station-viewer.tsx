@@ -18,6 +18,8 @@ import {
 } from "@/lib/sensorGrouping"
 import { Activity, Wifi, WifiOff, Clock } from "lucide-react"
 
+const STALE_THRESHOLD_MS = 5 * 60 * 1000
+
 function getTimestamp(t: number | Date | string): number {
   if (typeof t === "number") return t
   if (typeof t === "string") {
@@ -62,8 +64,11 @@ export default function StationViewer() {
     }
   }, [])
 
-  const physicalGroups = groupSensorsPhysically(sensors)
-  const logicalGroups = groupSensorsLogically(sensors)
+  const freshSensors = sensors.filter(
+    (s) => Date.now() - getTimestamp(s.timestamp) <= STALE_THRESHOLD_MS,
+  )
+  const physicalGroups = groupSensorsPhysically(freshSensors)
+  const logicalGroups = groupSensorsLogically(freshSensors)
 
 
   const handleValveCommand = (
@@ -159,7 +164,7 @@ export default function StationViewer() {
           )}
           <Badge variant="outline" className="flex items-center gap-1">
             <Activity className="w-3 h-3" />
-            {sensors.length} sensors
+            {freshSensors.length} sensors
           </Badge>
         </div>
       </div>
@@ -258,7 +263,7 @@ export default function StationViewer() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {sensors
+                {freshSensors
                   .filter((s) => s.sensor_type === "valve-state")
                   .map((sensor) => (
                     <div
