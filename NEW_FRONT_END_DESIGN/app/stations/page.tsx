@@ -118,6 +118,7 @@ export default function StationsPage() {
     },
   ])
   const [realtimeData, setRealtimeData] = useState<{ [key: string]: number[] }>({})
+  const [valveLoading, setValveLoading] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     async function fetchStations() {
@@ -232,6 +233,40 @@ export default function StationsPage() {
       console.error("Quick action publish failed", err)
     }
     console.log("Quick action:", button.name, message)
+  }
+
+  const handleValveAction = async (
+    valve: SensorData,
+    action: "open" | "close",
+  ) => {
+    setValveLoading((prev) => ({ ...prev, [valve.sensor_id]: true }))
+    const payload = {
+      station: valve.station_id,
+      controller: valve.controller_id,
+      sensor_id: valve.sensor_id,
+      sensor_type: valve.sensor_type,
+      unit: action === "open" ? "seconds" : "state",
+      value: action === "open" ? 300 : 0,
+      command: action,
+      source: "manual_override",
+      requestor_id: "web_app",
+      timestamp: Math.floor(Date.now() / 1000),
+      source_id: valve.source_id,
+    }
+    try {
+      await fetch("/api/mqtt/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: `controlcore/command/${valve.sensor_id}`,
+          payload,
+        }),
+      })
+    } catch (err) {
+      console.error("Valve command failed", err)
+    } finally {
+      setValveLoading((prev) => ({ ...prev, [valve.sensor_id]: false }))
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -393,10 +428,26 @@ export default function StationsPage() {
                                   </Badge>
                                 </div>
                                 <div className="flex gap-2">
-                                  <Button size="sm" variant="outline" disabled={station.status !== "online"}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={
+                                      station.status !== "online" ||
+                                      valveLoading[valve.sensor_id]
+                                    }
+                                    onClick={() => handleValveAction(valve, "open")}
+                                  >
                                     Open 5min
                                   </Button>
-                                  <Button size="sm" variant="outline" disabled={station.status !== "online"}>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={
+                                      station.status !== "online" ||
+                                      valveLoading[valve.sensor_id]
+                                    }
+                                    onClick={() => handleValveAction(valve, "close")}
+                                  >
                                     Close
                                   </Button>
                                 </div>
