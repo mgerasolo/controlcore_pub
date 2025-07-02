@@ -18,6 +18,17 @@ import {
 } from "@/lib/sensorGrouping"
 import { Activity, Wifi, WifiOff, Clock } from "lucide-react"
 
+function getTimestamp(t: number | Date | string): number {
+  if (typeof t === "number") return t
+  if (typeof t === "string") {
+    const parsed = new Date(t)
+    const time = parsed.getTime()
+    return isNaN(time) ? 0 : time
+  }
+  const time = t.getTime?.()
+  return isNaN(time) ? 0 : time
+}
+
 export default function StationViewer() {
   const [sensors, setSensors] = useState<SensorReading[]>([])
   const [isConnected, setIsConnected] = useState(false)
@@ -35,13 +46,7 @@ export default function StationViewer() {
             )
         )
         const result = [...filtered, reading]
-        result.sort((a, b) => {
-          const aId = `${a.sensor_id}_${a.sensor_type}`
-          const bId = `${b.sensor_id}_${b.sensor_type}`
-          if (aId < bId) return -1
-          if (aId > bId) return 1
-          return 0
-        })
+        result.sort((a, b) => getTimestamp(b.timestamp) - getTimestamp(a.timestamp))
         return result
       })
     })
