@@ -50,6 +50,20 @@ Use dot_env
 
 Install dependencies with `pip install -r ../requirements.txt`.
 
+### Database Cleanup
+
+Old sensor readings can accumulate quickly. Purge stale entries with:
+
+```bash
+python -m station_viewer.python.src.services.data_cleanup --days 90
+```
+
+Running this command daily via cron keeps the `sensor_data` table manageable:
+
+```cron
+0 2 * * * cd /opt/controlcore && /usr/bin/python -m station_viewer.python.src.services.data_cleanup --days 90 >> /var/log/data_cleanup.log 2>&1
+```
+
 ### Arduino Station Layout
 
 Before compiling the firmware, edit `arduino/lib/StationLayout.h` to reflect your
