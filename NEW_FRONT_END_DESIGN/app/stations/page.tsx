@@ -138,6 +138,8 @@ export default function StationsPage() {
     }
 
     fetchStations()
+    const interval = setInterval(fetchStations, 25000)
+    return () => clearInterval(interval)
   }, [])
 
 
