@@ -402,13 +402,13 @@ export default function StationsPage() {
                       <CardContent>
                         <div className="space-y-2 text-sm">
                           <div className="p-2 bg-muted rounded font-mono text-xs">
-                            controlcore/data/{station.station}/#
+                            {`controlcore/data/${station.station}/#`}
                           </div>
                           <div className="p-2 bg-muted rounded font-mono text-xs">
-                            controlcore/command/{station.station}
+                            {`controlcore/command/${station.station}`}
                           </div>
                           <div className="p-2 bg-muted rounded font-mono text-xs">
-                            controlcore/config/{station.station}
+                            {`controlcore/config/${station.station}`}
                           </div>
                         </div>
                       </CardContent>
