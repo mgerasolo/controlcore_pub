@@ -32,5 +32,7 @@ __pycache__/
 NEW_FRONT_END_DESIGN/node_modules/
 NEW_FRONT_END_DESIGN/.next/
 
+controlcore_main_site/node_modules/
+controlcore_main_site/.next/
 
 app/api/auth/session/route.ts_bak
