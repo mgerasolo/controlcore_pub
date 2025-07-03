@@ -492,42 +492,55 @@ export default function StationsPage() {
                               <div className="col-span-full font-semibold text-sm mt-4">
                                 {type}
                               </div>
-                              {sensors.map((sensor) => {
-                                const now = Date.now()
-                                const timestamp = getTimestamp(sensor.timestamp)
-                                const isStale = now - timestamp > STALE_THRESHOLD_MS
-                                const age = Math.floor((now - timestamp) / 1000)
-                                return (
-                                  <Card
-                                    key={sensor.sensor_id}
-                                    className={isStale ? "border-yellow-200 bg-yellow-50" : "border-green-200 bg-green-50"}
-                                  >
-                                    <CardContent className="p-4">
-                                      <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-lg">{getSensorIcon(sensor.sensor_type)}</span>
-                                          <span className="font-medium text-sm">{sensor.sensor_id}</span>
-                                        </div>
-                                        <Badge variant={isStale ? "secondary" : "default"} className="text-xs">
-                                          {Math.max(age, 0)}s ago
-                                        </Badge>
+                              {sensors.map(sensor => (
+                                <Card
+                                  key={sensor.sensor_id}
+                                  className={
+                                    Date.now() - getTimestamp(sensor.timestamp) > STALE_THRESHOLD_MS
+                                      ? "border-yellow-200 bg-yellow-50"
+                                      : "border-green-200 bg-green-50"
+                                  }
+                                >
+                                  <CardContent className="p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-lg">{getSensorIcon(sensor.sensor_type)}</span>
+                                        <span className="font-medium text-sm">{sensor.sensor_id}</span>
                                       </div>
-                                      <div className="space-y-2">
-                                        <div className="text-2xl font-bold">
-                                          {sensor.value} {sensor.unit}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Type: {sensor.sensor_type}</div>
-                                        <div className="text-xs text-muted-foreground">
-                                          Pin: {sensor.pin >= 0 ? sensor.pin : "N/A"}
-                                        </div>
-                                        <div className="text-xs font-mono bg-muted p-1 rounded text-[10px]">
-                                          {sensor.source_id}
-                                        </div>
+                                      <Badge
+                                        variant={
+                                          Date.now() - getTimestamp(sensor.timestamp) > STALE_THRESHOLD_MS
+                                            ? "secondary"
+                                            : "default"
+                                        }
+                                        className="text-xs"
+                                      >
+                                        {
+                                          Math.max(
+                                            Math.floor(
+                                              (Date.now() - getTimestamp(sensor.timestamp)) / 1000
+                                            ),
+                                            0
+                                          )
+                                        }
+                                        s ago
+                                      </Badge>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <div className="text-2xl font-bold">
+                                        {sensor.value} {sensor.unit}
                                       </div>
-                                    </CardContent>
-                                  </Card>
-                                )
-                              })
+                                      <div className="text-xs text-muted-foreground">Type: {sensor.sensor_type}</div>
+                                      <div className="text-xs text-muted-foreground">
+                                        Pin: {sensor.pin >= 0 ? sensor.pin : "N/A"}
+                                      </div>
+                                      <div className="text-xs font-mono bg-muted p-1 rounded text-[10px]">
+                                        {sensor.source_id}
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
                             </Fragment>
                           ))}
                           </div>
