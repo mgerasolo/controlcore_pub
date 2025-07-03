@@ -18,3 +18,16 @@ def test_daily_summary_route_uses_function():
     route_content = route_path.read_text()
     assert 'fetchDailySummary' in route_content
 
+
+def test_fetch_overview_defined():
+    content = Path('controlcore_main_site/lib/weather.ts').read_text()
+    assert 'export async function fetchOverview' in content
+    assert 'overview_data' in content
+
+
+def test_overview_route_uses_function():
+    route_path = Path('controlcore_main_site/app/api/weather/overview/route.ts')
+    assert route_path.exists()
+    route_content = route_path.read_text()
+    assert 'fetchOverview' in route_content
+
