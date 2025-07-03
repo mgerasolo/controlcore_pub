@@ -6,6 +6,7 @@ import paho.mqtt.client as mqtt
 
 from shared import load_environment, build_dsn_from_env
 from .status_logger import update_status
+from openweather.scripts.archive_recent_to_longterm import archive_recent_data
 
 load_environment()
 
@@ -75,6 +76,11 @@ def run_due_tasks():
                 """, (id,))
 
                 print(f"[runner] ✅ Triggered zone '{zone_id}' for {duration_seconds // 60} minutes")
+
+    try:
+        archive_recent_data()
+    except Exception as exc:
+        print(f"[runner] ⚠️ weather archive failed: {exc}")
 
     update_status("runner", "completed", {"tasks": len(rows)})
     client.disconnect()
