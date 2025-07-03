@@ -46,7 +46,7 @@ export async function fetchForecast(limit = 1) {
   return rows
 }
 
-export async function fetchDailySummary(limit = 7) {
+export async function fetchDailySummary(limit = 20) {
   const { rows } = await histPool.query(
     `SELECT date,
             lat,
@@ -59,6 +59,19 @@ export async function fetchDailySummary(limit = 7) {
             humidity_afternoon,
             cloud_cover_afternoon
        FROM daily_summary_data
+      ORDER BY date DESC
+      LIMIT $1`,
+    [limit],
+  )
+  return rows
+}
+
+export async function fetchOverview(limit = 2) {
+  const { rows } = await forePool.query(
+    `SELECT date,
+            weather_overview,
+            day
+       FROM overview_data
       ORDER BY date DESC
       LIMIT $1`,
     [limit],
