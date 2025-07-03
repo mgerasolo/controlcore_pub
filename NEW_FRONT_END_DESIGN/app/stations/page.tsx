@@ -529,7 +529,7 @@ export default function StationsPage() {
                                 )
                               })
                             </Fragment>
-                            ))}
+                          ))}
                           </div>
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
