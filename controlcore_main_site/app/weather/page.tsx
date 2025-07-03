@@ -63,7 +63,8 @@ export default function WeatherPage() {
   const precipChart = daily
     .slice(0, 7)
     .map((d) => ({
-      date: format(new Date(d.date), "MMM d"),
+      // convert epoch seconds to milliseconds for accurate Date objects
+      date: format(new Date(d.date * 1000), "MMM d"),
       precipitation: d.precipitation_total || 0,
     }))
     .reverse()
