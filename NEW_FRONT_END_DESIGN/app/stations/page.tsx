@@ -578,10 +578,7 @@ export default function StationsPage() {
                       <ScrollArea className="h-96 border rounded-lg p-4">
                         <div className="space-y-2">
                           {mqttMessages.map((message) => (
-                            <div
-                              key={message.id}
-                              className="border-l-2 border-blue-500 pl-3 py-2 bg-muted/50 rounded-r"
-                            >
+                            <div key={message.id} className="border-l-2 border-blue-500 pl-3 py-2 bg-muted/50 rounded-r">
                               <div className="flex items-center justify-between mb-1">
                                 <span className="font-mono text-sm font-medium">{message.topic}</span>
                                 <span className="text-xs text-muted-foreground">

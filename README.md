@@ -39,18 +39,5 @@ See [docs/forecast_accuracy.md](docs/forecast_accuracy.md) for details on the fo
 - Prepare for containerization and field deployment
 
 
-## Need to update the controlcore_ai.runner with proper command calls:
- id |    station     |    controller_id    |         sensor_id          | sensor_type | command | value |  unit   |      source      |  requestor_id   |          received_at          |                                     source_id                                      | du
-ration | timestamp
-----+----------------+---------------------+----------------------------+-------------+---------+-------+---------+------------------+-----------------+-------------------------------+------------------------------------------------------------------------------------+---
--------+------------
-
-
- 60 | garden-hydrant | uno-r4-wifi-primary | BeetsTomatoes-USSolid      | valve-state | open    |   180 | seconds | manual_override  | web_app         | 2025-06-29 05:40:17-04        | excessus-home_garden-hydrant_uno-r4-wifi-primary_valve-state_BeetsTomatoes-USSolid |          |
- 61 | garden-hydrant | uno-r4-wifi-primary | BeetsTomatoes-USSolid      | valve-state | open    |   180 | seconds | manual_override  | web_app         | 2025-06-29 16:20:53-04        | excessus-home_garden-hydrant_uno-r4-wifi-primary_valve-state_BeetsTomatoes-USSolid |          |
- 62 | garden-hydrant | uno-r4-wifi-primary | CucumberWatermelon-USSolid |             | open    |       |         | advisor_schedule | watering_runner | 2025-06-30 00:09:40.916298-04 |                                                                                    |     5400 | 1751256581
- 63 | garden-hydrant | uno-r4-wifi-primary | BeetsTomatoes-USSolid      |             | open    |       |         | advisor_schedule | watering_runner | 2025-06-30 00:09:40.916298-04 |                                                                                    |     3600 | 1751256581
- 64 | garden-hydrant | uno-r4-wifi-primary | BeetsTomatoes-USSolid      | valve-state | open    |   180 | seconds | manual_override  | web_app         | 2025-06-30 04:10:43-04        | excessus-home_garden-hydrant_uno-r4-wifi-primary_valve-state_BeetsTomatoes-USSolid |          |
-(63 rows)
 
 
