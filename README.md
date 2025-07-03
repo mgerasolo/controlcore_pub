@@ -15,6 +15,9 @@ for your broker (e.g. `ws://localhost:9001`). Install the Python dependencies
 with `pip install -r requirements.txt` after creating your virtual environment.
 Specify `BASELINE_SENSOR_ID` with the `source_id` of your on-site temperature
 sensor so the weather page can display the most recent reading.
+Set `OPENWEATHER_ARCHIVE_CUTOFF_DAYS` to control how old weather data must be before
+being moved to long‑term tables. `OPENWEATHER_ARCHIVE_LOCATIONS` lists the
+friendly names that have `<name>_daily` and `<name>_hourly` tables used for archival.
 
 ## Planned Structure
 
