@@ -18,10 +18,18 @@ const forePool = new Pool({
 
 export async function fetchHistorical(limit = 24) {
   const { rows } = await histPool.query(
-    `SELECT dt, lat, lon, temp, precipitation_total, wind_speed
-     FROM hourly_data
-     ORDER BY dt DESC
-     LIMIT $1`,
+    `SELECT h.dt,
+            h.lat,
+            h.lon,
+            h.temp,
+            d.precipitation_total,
+            h.wind_speed
+       FROM hourly_data h
+       LEFT JOIN daily_summary_data d
+              ON to_timestamp(h.dt)::date = to_timestamp(d.date)::date
+             AND h.location_id = d.location_id
+      ORDER BY h.dt DESC
+      LIMIT $1`,
     [limit],
   )
   return rows
