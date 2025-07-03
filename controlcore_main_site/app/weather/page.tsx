@@ -110,6 +110,7 @@ export default function WeatherPage() {
 
   const stats5 = statsFor(5);
   const stats15 = statsFor(15);
+  const stats30 = daily.length >= 30 ? statsFor(30) : null;
 
   const yesterday = daily[1];
   const today = daily[0];
@@ -269,6 +270,7 @@ export default function WeatherPage() {
                     <TableHead>Metric</TableHead>
                     <TableHead>Last 5 Days</TableHead>
                     <TableHead>Last 15 Days</TableHead>
+                    <TableHead>Last 30 Days</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -276,26 +278,41 @@ export default function WeatherPage() {
                     <TableCell>Max Temp Avg</TableCell>
                     <TableCell>{stats5.avgMax.toFixed(1)}°C</TableCell>
                     <TableCell>{stats15.avgMax.toFixed(1)}°C</TableCell>
+                    <TableCell>
+                      {stats30 ? `${stats30.avgMax.toFixed(1)}°C` : "N/A"}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>Min Temp Avg</TableCell>
                     <TableCell>{stats5.avgMin.toFixed(1)}°C</TableCell>
                     <TableCell>{stats15.avgMin.toFixed(1)}°C</TableCell>
+                    <TableCell>
+                      {stats30 ? `${stats30.avgMin.toFixed(1)}°C` : "N/A"}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>Total Rain</TableCell>
                     <TableCell>{stats5.totalRain.toFixed(1)} mm</TableCell>
                     <TableCell>{stats15.totalRain.toFixed(1)} mm</TableCell>
+                    <TableCell>
+                      {stats30 ? `${stats30.totalRain.toFixed(1)} mm` : "N/A"}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>Wind Avg</TableCell>
                     <TableCell>{stats5.avgWind.toFixed(1)} m/s</TableCell>
                     <TableCell>{stats15.avgWind.toFixed(1)} m/s</TableCell>
+                    <TableCell>
+                      {stats30 ? `${stats30.avgWind.toFixed(1)} m/s` : "N/A"}
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>RH Avg</TableCell>
                     <TableCell>{stats5.avgRh.toFixed(1)}%</TableCell>
                     <TableCell>{stats15.avgRh.toFixed(1)}%</TableCell>
+                    <TableCell>
+                      {stats30 ? `${stats30.avgRh.toFixed(1)}%` : "N/A"}
+                    </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
