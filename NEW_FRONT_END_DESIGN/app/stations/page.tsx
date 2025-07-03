@@ -527,10 +527,10 @@ export default function StationsPage() {
                                     </CardContent>
                                   </Card>
                                 )
-                              })}
+                              })
                             </Fragment>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
                           <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -541,7 +541,8 @@ export default function StationsPage() {
                     </CardContent>
                   </Card>
                 </TabsContent>
-              ))}
+              );
+              })}
             </Tabs>
           </TabsContent>
 
