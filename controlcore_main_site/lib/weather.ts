@@ -68,6 +68,7 @@ export async function fetchDailySummary(limit = 20) {
 }
 
 export async function fetchOverview(limit = 2) {
+  const rowCount = Math.max(2, limit);
   const { rows } = await forePool.query(
     `SELECT date,
             weather_overview,
@@ -75,7 +76,7 @@ export async function fetchOverview(limit = 2) {
        FROM overview_data
       ORDER BY date DESC
       LIMIT $1`,
-    [limit],
+    [rowCount],
   );
   return rows;
 }

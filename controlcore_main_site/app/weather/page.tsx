@@ -242,10 +242,17 @@ export default function WeatherPage() {
             <CardHeader>
               <CardTitle>AI Overview</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm whitespace-pre-line">
-                {overview[0].weather_overview}
-              </p>
+            <CardContent className="space-y-2">
+              {overview[0] && (
+                <p className="text-sm whitespace-pre-line">
+                  {overview[0].weather_overview}
+                </p>
+              )}
+              {overview[1] && (
+                <p className="text-sm whitespace-pre-line">
+                  {overview[1].weather_overview}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
