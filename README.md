@@ -13,6 +13,8 @@ Copy `.env.example` to `.env` and provide real values for the database and MQTT
 settings used by all modules. Set `NEXT_PUBLIC_MQTT_WS_URL` to the WebSocket URL
 for your broker (e.g. `ws://localhost:9001`). Install the Python dependencies
 with `pip install -r requirements.txt` after creating your virtual environment.
+Specify `BASELINE_SENSOR_ID` with the `source_id` of your on-site temperature
+sensor so the weather page can display the most recent reading.
 
 ## Planned Structure
 
