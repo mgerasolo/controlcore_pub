@@ -1,64 +1,88 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Navigation } from "@/components/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts"
-import { format } from "date-fns"
+import { useEffect, useState } from "react";
+import { Navigation } from "@/components/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
+import { format } from "date-fns";
 
 interface DailyRow {
-  date: string
-  temperature_min: number
-  temperature_max: number
-  precipitation_total: number
-  wind_max_speed: number
-  humidity_afternoon: number
+  date: string;
+  temperature_min: number;
+  temperature_max: number;
+  precipitation_total: number;
+  wind_max_speed: number;
+  humidity_afternoon: number;
 }
 
 interface ForecastRow {
-  [key: string]: any
+  [key: string]: any;
 }
 
 interface OverviewRow {
-  date: string
-  weather_overview: string
-  day: number
+  date: string;
+  weather_overview: string;
+  day: number;
 }
 
 export default function WeatherPage() {
-  const [daily, setDaily] = useState<DailyRow[]>([])
-  const [forecast, setForecast] = useState<ForecastRow | null>(null)
-  const [overview, setOverview] = useState<OverviewRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const [daily, setDaily] = useState<DailyRow[]>([]);
+  const [forecast, setForecast] = useState<ForecastRow | null>(null);
+  const [baseline, setBaseline] = useState<{
+    value: number;
+    unit: string | null;
+  } | null>(null);
+  const [overview, setOverview] = useState<OverviewRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const dailyRes = await fetch("/api/weather/daily-summary")
-        const dailyData = await dailyRes.json()
+        const dailyRes = await fetch("/api/weather/daily-summary");
+        const dailyData = await dailyRes.json();
         if (dailyData.success) {
-          setDaily(dailyData.data)
+          setDaily(dailyData.data);
         }
-        const foreRes = await fetch("/api/weather/forecast")
-        const foreData = await foreRes.json()
+        const foreRes = await fetch("/api/weather/forecast");
+        const foreData = await foreRes.json();
         if (foreData.success && foreData.data.length) {
-          setForecast(foreData.data[0])
+          setForecast(foreData.data[0]);
         }
-        const overRes = await fetch("/api/weather/overview")
-        const overData = await overRes.json()
+        const baseRes = await fetch("/api/weather/baseline");
+        const baseData = await baseRes.json();
+        if (baseData.success && baseData.data) {
+          setBaseline(baseData.data);
+        }
+        const overRes = await fetch("/api/weather/overview");
+        const overData = await overRes.json();
         if (overData.success) {
-          setOverview(overData.data)
+          setOverview(overData.data);
         }
       } catch (err) {
-        console.error("Failed to load weather", err)
+        console.error("Failed to load weather", err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    load()
-  }, [])
+    load();
+  }, []);
 
   const precipChart = daily
     .slice(0, 7)
@@ -67,28 +91,28 @@ export default function WeatherPage() {
       date: format(new Date(d.date * 1000), "MMM d"),
       precipitation: d.precipitation_total || 0,
     }))
-    .reverse()
+    .reverse();
 
   const statsFor = (days: number) => {
-    const subset = daily.slice(0, days)
-    if (!subset.length) return null
-    const count = subset.length
+    const subset = daily.slice(0, days);
+    if (!subset.length) return null;
+    const count = subset.length;
     const sum = (key: keyof DailyRow) =>
-      subset.reduce((acc, cur) => acc + (cur[key] || 0), 0)
+      subset.reduce((acc, cur) => acc + (cur[key] || 0), 0);
     return {
       avgMax: sum("temperature_max") / count,
       avgMin: sum("temperature_min") / count,
       totalRain: sum("precipitation_total"),
       avgWind: sum("wind_max_speed") / count,
       avgRh: sum("humidity_afternoon") / count,
-    }
-  }
+    };
+  };
 
-  const stats5 = statsFor(5)
-  const stats15 = statsFor(15)
+  const stats5 = statsFor(5);
+  const stats15 = statsFor(15);
 
-  const yesterday = daily[1]
-  const today = daily[0]
+  const yesterday = daily[1];
+  const today = daily[0];
 
   return (
     <div className="min-h-screen enhanced-bg">
@@ -129,11 +153,21 @@ export default function WeatherPage() {
                 </div>
                 <div className="space-y-1">
                   <div className="font-semibold">Right Now</div>
-                  {forecast ? (
+                  {baseline || forecast ? (
                     <>
-                      <div>Temp: {forecast.current_temp}°C</div>
-                      <div>Wind: {forecast.current_wind_speed} m/s</div>
-                      <div>RH: {forecast.current_humidity}%</div>
+                      <div>
+                        Temp:{" "}
+                        {baseline
+                          ? `${baseline.value}${baseline.unit || ""}`
+                          : `${forecast?.current_temp ?? "N/A"}°C`}
+                      </div>
+                      <div>
+                        Wind: {forecast ? forecast.current_wind_speed : "N/A"}{" "}
+                        m/s
+                      </div>
+                      <div>
+                        RH: {forecast ? forecast.current_humidity : "N/A"}%
+                      </div>
                     </>
                   ) : (
                     <div>N/A</div>
@@ -177,11 +211,11 @@ export default function WeatherPage() {
             ) : forecast ? (
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {Array.from({ length: 2 }).map((_, i) => {
-                  const ts = forecast[`day_${i}_timestamptz`]
-                  const high = forecast[`day_${i}_temp_max`]
-                  const low = forecast[`day_${i}_temp_min`]
-                  const pop = forecast[`day_${i}_pop`]
-                  const desc = forecast[`day_${i}_weather_description`]
+                  const ts = forecast[`day_${i}_timestamptz`];
+                  const high = forecast[`day_${i}_temp_max`];
+                  const low = forecast[`day_${i}_temp_min`];
+                  const pop = forecast[`day_${i}_pop`];
+                  const desc = forecast[`day_${i}_weather_description`];
                   return (
                     <div key={i} className="space-y-1">
                       <div className="font-semibold">
@@ -189,10 +223,12 @@ export default function WeatherPage() {
                       </div>
                       <div>High: {high}°C</div>
                       <div>Low: {low}°C</div>
-                      <div>Rain: {pop != null ? Math.round(pop * 100) : 0}%</div>
+                      <div>
+                        Rain: {pop != null ? Math.round(pop * 100) : 0}%
+                      </div>
                       <div>{desc}</div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             ) : (
@@ -261,6 +297,5 @@ export default function WeatherPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
-

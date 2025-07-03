@@ -31,3 +31,16 @@ def test_overview_route_uses_function():
     route_content = route_path.read_text()
     assert 'fetchOverview' in route_content
 
+
+def test_fetch_baseline_sensor_defined():
+    content = Path('controlcore_main_site/lib/weather.ts').read_text()
+    assert 'export async function fetchBaselineSensor' in content
+    assert 'sensor_data' in content
+
+
+def test_baseline_route_uses_function():
+    route_path = Path('controlcore_main_site/app/api/weather/baseline/route.ts')
+    assert route_path.exists()
+    route_content = route_path.read_text()
+    assert 'fetchBaselineSensor' in route_content
+

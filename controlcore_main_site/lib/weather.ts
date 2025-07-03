@@ -1,20 +1,21 @@
-import { Pool } from 'pg'
+import { Pool } from "pg";
+import pool from "./db";
 
 const histPool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
+  host: process.env.PG_HOST || "localhost",
+  port: parseInt(process.env.PG_PORT || "5432", 10),
   user: process.env.OPENHIST_USER,
   password: process.env.OPENHIST_PW,
-  database: 'openweather_historical',
-})
+  database: "openweather_historical",
+});
 
 const forePool = new Pool({
-  host: process.env.PG_HOST || 'localhost',
-  port: parseInt(process.env.PG_PORT || '5432', 10),
+  host: process.env.PG_HOST || "localhost",
+  port: parseInt(process.env.PG_PORT || "5432", 10),
   user: process.env.OPENFORE_USER,
   password: process.env.OPENFORE_PW,
-  database: 'openweather_forecast',
-})
+  database: "openweather_forecast",
+});
 
 export async function fetchHistorical(limit = 24) {
   const { rows } = await histPool.query(
@@ -31,8 +32,8 @@ export async function fetchHistorical(limit = 24) {
       ORDER BY h.dt DESC
       LIMIT $1`,
     [limit],
-  )
-  return rows
+  );
+  return rows;
 }
 
 export async function fetchForecast(limit = 1) {
@@ -42,8 +43,8 @@ export async function fetchForecast(limit = 1) {
      ORDER BY "timestamp" DESC
      LIMIT $1`,
     [limit],
-  )
-  return rows
+  );
+  return rows;
 }
 
 export async function fetchDailySummary(limit = 20) {
@@ -62,8 +63,8 @@ export async function fetchDailySummary(limit = 20) {
       ORDER BY date DESC
       LIMIT $1`,
     [limit],
-  )
-  return rows
+  );
+  return rows;
 }
 
 export async function fetchOverview(limit = 2) {
@@ -75,6 +76,18 @@ export async function fetchOverview(limit = 2) {
       ORDER BY date DESC
       LIMIT $1`,
     [limit],
-  )
-  return rows
+  );
+  return rows;
+}
+
+export async function fetchBaselineSensor(sourceId: string) {
+  const { rows } = await pool.query(
+    `SELECT sensor_type, value, unit, received_at
+       FROM sensor_data
+      WHERE source_id = $1
+      ORDER BY received_at DESC
+      LIMIT 1`,
+    [sourceId],
+  );
+  return rows[0] || null;
 }
