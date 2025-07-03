@@ -45,3 +45,23 @@ export async function fetchForecast(limit = 1) {
   )
   return rows
 }
+
+export async function fetchDailySummary(limit = 7) {
+  const { rows } = await histPool.query(
+    `SELECT date,
+            lat,
+            lon,
+            temperature_min,
+            temperature_max,
+            precipitation_total,
+            wind_max_speed,
+            wind_max_direction,
+            humidity_afternoon,
+            cloud_cover_afternoon
+       FROM daily_summary_data
+      ORDER BY date DESC
+      LIMIT $1`,
+    [limit],
+  )
+  return rows
+}
