@@ -13,9 +13,16 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip"
+import {
   Zap,
   Power,
   AlertCircle,
+  AlertTriangle,
   CheckCircle,
   Clock,
   Activity,
@@ -54,12 +61,21 @@ interface SensorData {
   source_id: string
 }
 
+interface ControllerHealth {
+  controller_id: string
+  last_reported: Date | null
+  issue: string
+  severity: string | null
+  notes: string | null
+}
+
 interface StationData {
   station: string
   controller_id: string
   status: "online" | "offline" | "maintenance"
   sensors: SensorData[]
-  lastUpdate: Date
+  lastUpdate: Date | null
+  health: ControllerHealth[]
 }
 
 interface MQTTMessage {
@@ -129,6 +145,10 @@ export default function StationsPage() {
           const normalized = data.stations.map((s: any) => ({
             ...s,
             lastUpdate: s.lastUpdate ? new Date(s.lastUpdate) : null,
+            health: (s.health || []).map((h: any) => ({
+              ...h,
+              last_reported: h.last_reported ? new Date(h.last_reported) : null,
+            })),
           }))
           normalized.sort((a: any, b: any) => {
             if (!a.lastUpdate && !b.lastUpdate) return 0
@@ -328,6 +348,7 @@ export default function StationsPage() {
           <p className="text-muted-foreground">Real-time monitoring, MQTT integration, and system control</p>
         </div>
 
+        <TooltipProvider delayDuration={0}>
         <Tabs defaultValue="stations" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="stations">Stations</TabsTrigger>
@@ -340,12 +361,32 @@ export default function StationsPage() {
             <Tabs value={selectedStation} onValueChange={setSelectedStation} className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
                 {stations.map((station) => {
-                  const StatusIcon = getStatusIcon(station.status)
+                  const hasIssues = station.health && station.health.length > 0
                   return (
-                    <TabsTrigger key={station.station} value={station.station} className="flex items-center gap-2">
-                      <div className={`h-2 w-2 rounded-full ${getStatusColor(station.status)}`}></div>
+                    <TabsTrigger
+                      key={station.station}
+                      value={station.station}
+                      className="flex items-center gap-2"
+                    >
+                      <div
+                        className={`h-2 w-2 rounded-full ${getStatusColor(station.status)}`}
+                      ></div>
                       <span className="hidden sm:inline">{station.station}</span>
                       <span className="sm:hidden">{station.station.split("-")[0]}</span>
+                      {hasIssues && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertTriangle className="w-3 h-3 text-destructive" />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <ul className="text-xs space-y-1">
+                              {station.health.map((h, i) => (
+                                <li key={i}>{h.issue}</li>
+                              ))}
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </TabsTrigger>
                   )
                 })}
@@ -387,6 +428,27 @@ export default function StationsPage() {
                             <span className="text-sm text-muted-foreground">
                               {station.lastUpdate.toLocaleTimeString()}
                             </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Health</span>
+                            {station.health.length === 0 ? (
+                              <Badge variant="outline">OK</Badge>
+                            ) : (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge variant="destructive" className="cursor-default">
+                                    {station.health.length} issue{station.health.length > 1 ? "s" : ""}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <ul className="text-xs space-y-1">
+                                    {station.health.map((h, i) => (
+                                      <li key={i}>{h.issue}</li>
+                                    ))}
+                                  </ul>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -861,6 +923,7 @@ export default function StationsPage() {
             </div>
           </TabsContent>
         </Tabs>
+        </TooltipProvider>
       </div>
     </div>
   )
