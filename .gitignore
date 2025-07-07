@@ -36,3 +36,5 @@ controlcore_main_site/node_modules/
 controlcore_main_site/.next/
 
 app/api/auth/session/route.ts_bak
+
+controlcore_ai/logs/*.log
