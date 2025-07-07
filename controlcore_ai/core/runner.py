@@ -1,7 +1,9 @@
 import os
 import json
-import psycopg2
+import logging
+from pathlib import Path
 from datetime import datetime, timezone
+import psycopg2
 import paho.mqtt.client as mqtt
 
 from shared import load_environment, build_dsn_from_env
@@ -15,9 +17,26 @@ MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
 MQTT_COMMAND_PREFIX = os.getenv("MQTT_COMMAND_PREFIX", "controlcore/command")
 
+# Setup logging
+LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+logging.basicConfig(
+    filename=LOG_DIR / "runner.log",
+    filemode="a",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
+
+def log(msg: str, level: str = "info") -> None:
+    print(msg)
+    getattr(logging, level)(msg)
+
 
 def run_due_tasks():
-    now = datetime.now(timezone.utc)
+    start = datetime.now(timezone.utc)
+    log("[runner] Starting watering runner")
+    now = start
     client = mqtt.Client()
     client.connect(MQTT_HOST, MQTT_PORT, 60)
 
@@ -75,13 +94,15 @@ def run_due_tasks():
                     WHERE id = %s
                 """, (id,))
 
-                print(f"[runner] ✅ Triggered zone '{zone_id}' for {duration_seconds // 60} minutes")
+                log(f"[runner] ✅ Triggered zone '{zone_id}' for {duration_seconds // 60} minutes")
 
     try:
         archive_recent_data()
     except Exception as exc:
-        print(f"[runner] ⚠️ weather archive failed: {exc}")
+        log(f"[runner] ⚠️ weather archive failed: {exc}", level="warning")
 
+    duration = (datetime.now(timezone.utc) - start).total_seconds()
+    log(f"[runner] Completed in {duration:.1f}s with {len(rows)} tasks")
     update_status("runner", "completed", {"tasks": len(rows)})
     client.disconnect()
 

@@ -1,4 +1,6 @@
 import math
+import logging
+from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
@@ -13,6 +15,21 @@ load_environment()
 DB_DSN_CONTROLCORE = build_dsn_from_env("controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW")
 DB_DSN_HISTORICAL = build_dsn_from_env("openweather_historical", "OPENHIST_USER", "OPENHIST_PW")
 DB_DSN_FORECAST = build_dsn_from_env("openweather_forecast", "OPENFORE_USER", "OPENFORE_PW")
+
+# Setup logging
+LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+logging.basicConfig(
+    filename=LOG_DIR / "forecast_regression.log",
+    filemode="a",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
+
+def log(msg: str, level: str = "info") -> None:
+    print(msg)
+    getattr(logging, level)(msg)
 
 
 def calculate_error_metrics(df: pd.DataFrame, observed_col: str = "actual_temp") -> dict:
@@ -202,14 +219,18 @@ def main():
     parser.add_argument("--store", action="store_true", help="Persist metrics to DB")
     args = parser.parse_args()
 
+    start = datetime.now(timezone.utc)
+    log("[forecast_regression] Starting forecast regression")
     df = run_forecast_regression(args.days, args.store)
     metrics = calculate_error_metrics(df)
     if math.isnan(metrics["mae"]):
-        print("MAE: NaN\nRMSE: NaN")
+        log("MAE: NaN\nRMSE: NaN")
         details = {}
     else:
-        print(f"MAE: {metrics['mae']:.2f}\nRMSE: {metrics['rmse']:.2f}")
+        log(f"MAE: {metrics['mae']:.2f}\nRMSE: {metrics['rmse']:.2f}")
         details = metrics
+    duration = (datetime.now(timezone.utc) - start).total_seconds()
+    log(f"[forecast_regression] Completed in {duration:.1f}s")
     update_status("forecast_regression", "completed", details)
 
 

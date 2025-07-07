@@ -36,6 +36,14 @@ Use the environment variables `ADVISOR_INTERVAL_MINUTES` and
 `FORECAST_REGRESSION_INTERVAL_MINUTES` or pass `--advisor-interval` and
 `--forecast-interval` to adjust timings.
 
+Each core script writes execution details to its own log file under
+`controlcore_ai/logs/`:
+
+- `runner.log`
+- `advisor.log`
+- `forecast_regression.log`
+- `master.log`
+
 See [docs/forecast_accuracy.md](docs/forecast_accuracy.md) for details on the forecast regression workflow.
 
 ## Short Term Goals
