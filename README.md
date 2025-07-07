@@ -18,6 +18,8 @@ sensor so the weather page can display the most recent reading.
 Set `OPENWEATHER_ARCHIVE_CUTOFF_DAYS` to control how old weather data must be before
 being moved to long‑term tables. `OPENWEATHER_ARCHIVE_LOCATIONS` lists the
 friendly names that have `<name>_daily` and `<name>_hourly` tables used for archival.
+Set `DEEPSEEK_URL` to the endpoint of your DeepSeek instance and `SAURON_API_URL`
+to the `/chat` route exposed by the FastAPI server.
 
 ## Planned Structure
 
@@ -67,6 +69,16 @@ Each core script writes execution details to its own log file under
 - `master.log`
 
 See [docs/forecast_accuracy.md](docs/forecast_accuracy.md) for details on the forecast regression workflow.
+
+### FastAPI Server
+
+Start the API with:
+
+```bash
+./run_sauron_api.sh
+```
+
+The server listens on port 8000 and uses `DEEPSEEK_URL` for SQL generation and analysis. Configure your front end to send chat requests to `SAURON_API_URL`.
 
 ## Short Term Goals
 
