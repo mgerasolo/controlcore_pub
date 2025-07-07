@@ -36,10 +36,16 @@ class DummyCursor:
     def __init__(self):
         self.query = None
         self.params = None
+        self.executed = []
 
-    def execute(self, query, params):
+    def execute(self, query, params=None):
         self.query = query
         self.params = params
+        self.executed.append((query, params))
+
+    def fetchone(self):
+        # Simulate no existing controller record
+        return None
 
     def __enter__(self):
         return self
@@ -77,8 +83,8 @@ def test_insert_sensor_data_uses_source_prefix(monkeypatch):
         "timestamp": 1700000000,
     }
     insert_sensor_data(payload)
-
-    assert conn.cursor_obj.params[1] == "excessus-home"
+    # The first executed statement should be the sensor_data insert
+    assert conn.cursor_obj.executed[0][1][1] == "excessus-home"
 
 
 def test_insert_sensor_data_uses_json_map(monkeypatch):
@@ -96,7 +102,6 @@ def test_insert_sensor_data_uses_json_map(monkeypatch):
         "timestamp": 1700000000,
     }
     insert_sensor_data(payload)
-
-    assert conn.cursor_obj.params[1] == SENSOR_LOCATION_MAP["CucumberWatermelon-USSolid"]
+    assert conn.cursor_obj.executed[0][1][1] == SENSOR_LOCATION_MAP["CucumberWatermelon-USSolid"]
 
 

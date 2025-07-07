@@ -79,6 +79,47 @@ def resolve_timestamp(ts):
         return datetime.now(timezone.utc)
 
 
+def update_controller_metadata(cur, controller_id: str, station_id: str, seen_at: datetime) -> None:
+    """Update controllers.last_seen and log anomalies.
+
+    Args:
+        cur: Active database cursor.
+        controller_id: Controller identifier from the message.
+        station_id: Station identifier from the message.
+        seen_at: Timestamp derived from the message.
+    """
+    cur.execute(
+        "SELECT station_id FROM controllers WHERE controller_id = %s",
+        (controller_id,),
+    )
+    row = cur.fetchone()
+    if row is None:
+        # New controller encountered
+        cur.execute(
+            "INSERT INTO controllers (controller_id, station_id, last_seen) VALUES (%s, %s, %s)",
+            (controller_id, station_id, seen_at),
+        )
+        cur.execute(
+            "INSERT INTO controller_health (controller_id, issue, notes) VALUES (%s, %s, %s)",
+            (controller_id, "missing_controller", f"Added from station {station_id}"),
+        )
+    else:
+        existing_station = row[0]
+        if existing_station != station_id:
+            cur.execute(
+                "INSERT INTO controller_health (controller_id, issue, notes) VALUES (%s, %s, %s)",
+                (
+                    controller_id,
+                    "station_mismatch",
+                    f"Expected {existing_station}, got {station_id}",
+                ),
+            )
+        cur.execute(
+            "UPDATE controllers SET last_seen = %s WHERE controller_id = %s",
+            (seen_at, controller_id),
+        )
+
+
 def insert_sensor_data(payload):
     source_id = payload.get("source_id")
     if not source_id:
@@ -124,6 +165,12 @@ def insert_sensor_data(payload):
                     received_at,
                 ),
             )
+            update_controller_metadata(
+                cur,
+                payload.get("controller"),
+                payload.get("station"),
+                received_at,
+            )
 
 def insert_control_log(payload):
     received_at = resolve_timestamp(payload.get("timestamp"))
@@ -149,6 +196,12 @@ def insert_control_log(payload):
                 payload.get("source_id"),
                 received_at,
                 ),
+            )
+            update_controller_metadata(
+                cur,
+                payload.get("controller"),
+                payload.get("station"),
+                received_at,
             )
 
 def on_message(client, userdata, msg):
