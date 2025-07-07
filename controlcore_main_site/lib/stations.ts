@@ -18,6 +18,15 @@ export interface StationData {
   status: 'online' | 'offline'
   sensors: Sensor[]
   lastUpdate: Date | null
+  health: ControllerHealth[]
+}
+
+export interface ControllerHealth {
+  controller_id: string
+  last_reported: Date | null
+  issue: string
+  severity: string | null
+  notes: string | null
 }
 
 export async function fetchStations(): Promise<StationData[]> {
@@ -40,18 +49,25 @@ export async function fetchStations(): Promise<StationData[]> {
     ORDER BY station_id, controller_id, sensor_id, sensor_type, received_at DESC
   `)
 
+  const { rows: healthRows } = await pool.query(
+    'SELECT controller_id, last_reported, issue, severity, notes FROM controller_health'
+  )
+
   const stationMap: Record<string, StationData> = {}
+  const controllerStation: Record<string, string> = {}
 
   for (const c of controllers) {
     const stationId = c.station_id || 'unknown'
     const last = c.last_seen ? new Date(c.last_seen) : null
     const status = last && Date.now() - last.getTime() < 5 * 60 * 1000 ? 'online' : 'offline'
+    controllerStation[c.controller_id] = stationId
     stationMap[`${stationId}`] = {
       station: stationId,
       controller_id: c.controller_id,
       status,
       sensors: [],
       lastUpdate: last,
+      health: [],
     }
   }
 
@@ -69,6 +85,19 @@ export async function fetchStations(): Promise<StationData[]> {
       pin: s.pin,
       source_id: s.source_id,
       timestamp,
+    })
+  }
+
+  for (const h of healthRows) {
+    const stationId = controllerStation[h.controller_id]
+    const station = stationMap[stationId]
+    if (!station) continue
+    station.health.push({
+      controller_id: h.controller_id,
+      last_reported: h.last_reported ? new Date(h.last_reported) : null,
+      issue: h.issue,
+      severity: h.severity,
+      notes: h.notes,
     })
   }
 
