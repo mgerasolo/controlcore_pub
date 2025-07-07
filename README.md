@@ -29,12 +29,34 @@ friendly names that have `<name>_daily` and `<name>_hourly` tables used for arch
 
 The master runner at `controlcore_ai.core.master` can be invoked periodically
 via cron or a systemd timer. It always runs the watering `runner` and triggers
-`advisor` after its configured interval elapses. In the default **heavy** mode
-it will also launch `forecast_regression`. Specify `--mode light` or set
-`MASTER_MODE=light` to skip the regression step.
-Use the environment variables `ADVISOR_INTERVAL_MINUTES` and
-`FORECAST_REGRESSION_INTERVAL_MINUTES` or pass `--advisor-interval` and
-`--forecast-interval` to adjust timings.
+`advisor` after its configured interval elapses. Two execution modes are
+available:
+
+- **heavy** (default) &ndash; runs `forecast_regression` whenever its own
+  interval has elapsed
+- **light** &ndash; skips the regression step entirely
+
+Choose the mode with `--mode light|heavy` or the `MASTER_MODE` environment
+variable. The variables `ADVISOR_INTERVAL_MINUTES` and
+`FORECAST_REGRESSION_INTERVAL_MINUTES` or the arguments `--advisor-interval` and
+`--forecast-interval` control the internal schedules.
+
+Recommended cron frequencies are roughly every five minutes for `runner`
+(handled by the master invocation), regularly for `advisor`, and no more than
+every four hours for `forecast_regression`.
+
+Example usage:
+
+```bash
+# default heavy mode
+python -m controlcore_ai.core.master
+
+# explicitly run heavy mode
+python -m controlcore_ai.core.master --mode heavy
+
+# run in light mode
+python -m controlcore_ai.core.master --mode light
+```
 
 Each core script writes execution details to its own log file under
 `controlcore_ai/logs/`:
