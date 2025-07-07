@@ -29,7 +29,9 @@ friendly names that have `<name>_daily` and `<name>_hourly` tables used for arch
 
 The master runner at `controlcore_ai.core.master` can be invoked periodically
 via cron or a systemd timer. It always runs the watering `runner` and triggers
-`advisor` and `forecast_regression` after their configured intervals elapse.
+`advisor` after its configured interval elapses. In the default **heavy** mode
+it will also launch `forecast_regression`. Specify `--mode light` or set
+`MASTER_MODE=light` to skip the regression step.
 Use the environment variables `ADVISOR_INTERVAL_MINUTES` and
 `FORECAST_REGRESSION_INTERVAL_MINUTES` or pass `--advisor-interval` and
 `--forecast-interval` to adjust timings.
