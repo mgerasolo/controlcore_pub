@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Fragment } from "react"
+import { useState, useEffect, useMemo, Fragment } from "react"
 import { mqttClient } from "@/lib/mqttClient"
 import type { SensorReading } from "@/types/station"
 import { Navigation } from "@/components/navigation"
@@ -144,6 +144,11 @@ export default function StationsPage() {
   ])
   const [realtimeData, setRealtimeData] = useState<{ [key: string]: number[] }>({})
   const [valveLoading, setValveLoading] = useState<Record<string, boolean>>({})
+
+  const messagesLastMinute = useMemo(() => {
+    const cutoff = Date.now() - 60 * 1000
+    return mqttMessages.filter((m) => m.timestamp.getTime() >= cutoff).length
+  }, [mqttMessages])
 
   useEffect(() => {
     async function fetchStations() {
@@ -826,7 +831,7 @@ export default function StationsPage() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm">Messages/min</span>
-                        <span className="text-sm">~20</span>
+                        <span className="text-sm">{messagesLastMinute}</span>
                       </div>
                     </div>
                   </CardContent>
