@@ -10,6 +10,7 @@ DB_DSN_CONTROLCORE = build_dsn_from_env("controlcore", "CONTROLCORE_USER", "CONT
 
 ADVISOR_INTERVAL_MINUTES = int(os.getenv("ADVISOR_INTERVAL_MINUTES", "60"))
 FORECAST_INTERVAL_MINUTES = int(os.getenv("FORECAST_REGRESSION_INTERVAL_MINUTES", "1440"))
+DEFAULT_MODE = os.getenv("MASTER_MODE", "heavy")
 
 
 def get_last_run(module: str) -> datetime | None:
@@ -36,7 +37,12 @@ def run_module(name: str, args: list[str] | None = None) -> None:
     subprocess.run(cmd, check=True)
 
 
-def main(advisor_interval: int = ADVISOR_INTERVAL_MINUTES, forecast_interval: int = FORECAST_INTERVAL_MINUTES) -> None:
+def main(advisor_interval: int = ADVISOR_INTERVAL_MINUTES,
+         forecast_interval: int = FORECAST_INTERVAL_MINUTES,
+         mode: str | None = None) -> None:
+    if mode is None:
+        mode = DEFAULT_MODE
+    mode = mode.lower()
     # Always run runner to process any due schedules
     run_module("runner")
 
@@ -45,10 +51,10 @@ def main(advisor_interval: int = ADVISOR_INTERVAL_MINUTES, forecast_interval: in
     if should_run(last, advisor_interval):
         run_module("advisor")
 
-    # Forecast regression
-    last = get_last_run("forecast_regression")
-    if should_run(last, forecast_interval):
-        run_module("forecast_regression")
+    if mode == "heavy":
+        last = get_last_run("forecast_regression")
+        if should_run(last, forecast_interval):
+            run_module("forecast_regression")
 
 
 if __name__ == "__main__":
@@ -57,5 +63,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run Control AI modules as needed")
     parser.add_argument("--advisor-interval", type=int, default=ADVISOR_INTERVAL_MINUTES)
     parser.add_argument("--forecast-interval", type=int, default=FORECAST_INTERVAL_MINUTES)
+    parser.add_argument("--mode", choices=["light", "heavy"], default=DEFAULT_MODE)
     args = parser.parse_args()
-    main(args.advisor_interval, args.forecast_interval)
+    main(args.advisor_interval, args.forecast_interval, args.mode)
