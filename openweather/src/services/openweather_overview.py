@@ -41,7 +41,7 @@ class OpenWeatherDailyOverview:
                 'lon': self.longitude,
                 'appid': self.api_key,
                 'date': date,
-                'units': 'imperial'
+                'units': 'metric'
             }
 
 
