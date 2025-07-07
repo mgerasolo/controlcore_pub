@@ -71,13 +71,26 @@ See [docs/forecast_accuracy.md](docs/forecast_accuracy.md) for details on the fo
 ## Short Term Goals
 
 - Continue wiring the features of the front end to the data, control, and messaging of the backend
-  - The stations page is still missing the live Quick Controls button for action device valve 
-- Weather page is not aligned with the database tables:
-  - Current error:
-    historical api error error: column "precipitation_total" does not exist
-    at async n (.next/server/app/api/weather/forecast/route.js:1:2366)
-    at async i (.next/server/app/api/weather/historical/route.js:1:1520) {
-  - See below for details on page design concept
+  - The stations page still has the Quick Controls buttons greyed out
+    - Might be related to the Station Status showing Offline, despite being live
+
+  - Use data manager or similar to populate controller_health
+    - Can note if controller id seen in MQTT messages matches controllers table
+    - Stations page et al, can use the controller_health information
+
+controlcore=> select * from controllers;
+    controller_id    |   station_id   |           last_seen           | config_source | startup_config_hash | running_config_applied
+---------------------+----------------+-------------------------------+---------------+---------------------+------------------------
+ uno-r4-wifi-primary | garden-hydrant | 2025-07-01 16:40:53.093123-04 | demo-seed     |                     | f
+(1 row)
+
+controlcore=> select * from controller_health ;
+ controller_id | last_reported | issue | severity | notes
+---------------+---------------+-------+----------+-------
+(0 rows)
+
+
+
 
 ## Long Term Goals
 - Prepare for containerization and field deployment
