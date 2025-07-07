@@ -36,6 +36,15 @@ import {
   BarChart3,
   RefreshCw,
 } from "lucide-react"
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+} from "recharts"
 
 export const STALE_THRESHOLD_MS = 5 * 60 * 1000
 
@@ -196,6 +205,40 @@ export default function StationsPage() {
 
     return () => unsubscribe()
   }, [isSubscribed])
+
+  useEffect(() => {
+    if (!selectedStation) return
+
+    async function load() {
+      try {
+        const res = await fetch(`/api/stations/${selectedStation}/realtime`)
+        const json = await res.json()
+        if (json.success && Array.isArray(json.data)) {
+          const grouped = json.data.reduce(
+            (acc: { [key: string]: number[] }, item: SensorData) => {
+              const arr = acc[item.sensor_type] || []
+              arr.push(item.value)
+              acc[item.sensor_type] = arr
+              return acc
+            },
+            {},
+          )
+
+          setRealtimeData((prev) => {
+            const merged = { ...prev }
+            for (const [key, vals] of Object.entries(grouped)) {
+              merged[key] = [...(merged[key] || []), ...vals].slice(-20)
+            }
+            return merged
+          })
+        }
+      } catch (err) {
+        console.error('Failed to load realtime data', err)
+      }
+    }
+
+    load()
+  }, [selectedStation])
 
   const handleSubscribe = () => {
     setIsSubscribed(!isSubscribed)
@@ -805,20 +848,30 @@ export default function StationsPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Water Pressure (Last 60 seconds)</h4>
-                    <div className="h-48 border rounded-lg flex items-center justify-center bg-muted/50">
-                      <div className="text-center">
-                        <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm text-muted-foreground">
-                          Chart shows {realtimeData["water-pressure"]?.length || 0} data points
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Latest: {realtimeData["water-pressure"]?.slice(-1)[0]?.toFixed(1) || "N/A"} PSI
-                        </p>
+                  {Object.entries(realtimeData).map(([type, values]) => (
+                    <div key={type} className="space-y-4">
+                      <h4 className="font-medium">{type} (Last 60 seconds)</h4>
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={values.map((v, i) => ({ index: i, value: v }))}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="index" hide />
+                            <YAxis domain={["auto", "auto"]} />
+                            <RechartsTooltip />
+                            <Line
+                              type="monotone"
+                              dataKey="value"
+                              stroke="#8884d8"
+                              dot={false}
+                              isAnimationActive={false}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
                       </div>
                     </div>
-                  </div>
+                  ))}
 
                   <div className="space-y-4">
                     <h4 className="font-medium">Data Rate Monitor</h4>
