@@ -84,10 +84,12 @@ export default function AIPage() {
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return
 
+    const text = inputMessage
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: inputMessage,
+      content: text,
       timestamp: new Date(),
     }
 
@@ -95,64 +97,41 @@ export default function AIPage() {
     setInputMessage("")
     setIsLoading(true)
 
-    // Simulate AI response based on ControlCore system context
-    setTimeout(() => {
-      let response = ""
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      })
 
-      if (inputMessage.toLowerCase().includes("water") || inputMessage.toLowerCase().includes("irrigation")) {
-        response = `Based on current sensor data from your stations:
-
-• garden-hydrant: Water pressure at 106 PSI, flow rate 765 L/min
-• Recent watering completed 1 hour ago
-• Soil moisture levels are optimal at 68%
-
-The AI advisor recommends maintaining current schedule but reducing duration by 10% due to upcoming rain forecast. This will save approximately 284L of water while maintaining crop health.`
-      } else if (inputMessage.toLowerCase().includes("weather") || inputMessage.toLowerCase().includes("forecast")) {
-        response = `Weather integration shows:
-
-• Rain expected tomorrow morning (40mm predicted)
-• Temperature stable at 24°C
-• Humidity increasing to 85%
-
-Recommendation: Delay scheduled watering for garden-hydrant and greenhouse-zone until after rain event. The forecast_regression module suggests this will optimize water usage by 25% over the next 48 hours.`
-      } else if (inputMessage.toLowerCase().includes("schedule") || inputMessage.toLowerCase().includes("timing")) {
-        response = `Current watering schedule analysis:
-
-• 5 tasks pending in watering_schedule table
-• Next execution: garden-hydrant at 6:00 AM
-• AI advisor has optimized timing based on weather and soil conditions
-
-The system automatically adjusts schedules every 30 minutes using the master runner. All changes are logged in the control_log table for audit purposes.`
-      } else if (inputMessage.toLowerCase().includes("sensor") || inputMessage.toLowerCase().includes("data")) {
-        response = `Live sensor analysis from MQTT feeds:
-
-• BeetsTomatoes-USSolid: Valve state normal
-• BeetsTomatoes-Foush: Pressure sensor needs attention (irregular readings)
-• BeetsTomatoes-Grieda: Flow rate within normal parameters
-
-The sensor_data table shows 30-second intervals. All data is processed by the AI modules for anomaly detection and predictive maintenance recommendations.`
-      } else {
-        response = `I can help you with:
-
-• Irrigation optimization based on real-time sensor data
-• Weather-integrated scheduling using OpenWeather API
-• System health monitoring and predictive maintenance
-• Energy efficiency recommendations
-• Historical data analysis and trend forecasting
-
-Your ControlCore system is currently monitoring ${insights.length} active insights. What specific aspect would you like me to analyze?`
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`)
       }
+
+      const data = await res.json()
+      const responseText =
+        data.answer || data.response || data.message || JSON.stringify(data)
 
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: response,
+        content: responseText,
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, aiMessage])
+    } catch (err) {
+      console.error("AI chat error", err)
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "Sorry, there was an error processing your request.",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, aiMessage])
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   const getInsightIcon = (type: string) => {
