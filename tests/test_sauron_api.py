@@ -33,7 +33,7 @@ class DummyConn:
     def __exit__(self, exc_type, exc, tb):
         pass
 
-def run_chat(monkeypatch, sql):
+def run_chat(monkeypatch, sql, question="what?"):
     captured = {}
     monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
     monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient(sql))
@@ -44,10 +44,10 @@ def run_chat(monkeypatch, sql):
     monkeypatch.setattr(main, 'run_sql', lambda conn, q: captured.setdefault('query', q) or [])
 
     client = TestClient(main.app)
-    resp = client.post('/chat', json={'question': 'what?'})
+    resp = client.post('/chat', json={'question': question})
     assert resp.status_code == 200
     assert resp.json()['answer'] == 'hello'
-    assert captured['query'] == sql
+    assert captured['query'] == main.strip_fake_schemas(sql)
     return captured['args']
 
 def test_chat_controlcore(monkeypatch):
@@ -56,10 +56,10 @@ def test_chat_controlcore(monkeypatch):
 
 def test_chat_openweather_historical(monkeypatch):
     sql = 'SELECT * FROM openweather_historical.fincastle_daily'
-    args = run_chat(monkeypatch, sql)
+    args = run_chat(monkeypatch, sql, question='historical rainfall data')
     assert args == ('openweather_historical', 'OPENHIST_USER', 'OPENHIST_PW')
 
 def test_chat_openweather_forecast(monkeypatch):
     sql = 'SELECT * FROM openweather_forecast.forecast_data'
-    args = run_chat(monkeypatch, sql)
+    args = run_chat(monkeypatch, sql, question='weather forecast for tomorrow')
     assert args == ('openweather_forecast', 'OPENFORE_USER', 'OPENFORE_PW')
