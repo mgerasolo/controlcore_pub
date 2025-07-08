@@ -8,7 +8,10 @@ from shared import load_environment, build_dsn_from_env
 
 load_environment()
 
-DB_DSN = build_dsn_from_env("controlcore", "PG_USER", "PG_PASSWORD")
+# Use dedicated credentials for the ControlCore database
+DB_DSN = build_dsn_from_env(
+    "controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW"
+)
 
 # Load mapping of sensor_id to location_id
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), '../../../configs')

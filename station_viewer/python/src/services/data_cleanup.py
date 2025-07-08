@@ -6,7 +6,10 @@ import psycopg2
 from shared import load_environment, build_dsn_from_env
 
 load_environment()
-DB_DSN = build_dsn_from_env("controlcore", "PG_USER", "PG_PASSWORD")
+# Use dedicated credentials for the ControlCore database
+DB_DSN = build_dsn_from_env(
+    "controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW"
+)
 
 
 def remove_old_sensor_data(days: int) -> int:
