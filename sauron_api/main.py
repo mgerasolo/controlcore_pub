@@ -208,6 +208,9 @@ async def chat(req: ChatRequest):
         user_var, pw_var = DB_USER_VARS.get(dbname, ("PG_USER", "PG_PASSWORD"))
         with connect_using_env(dbname, user_var, pw_var) as conn:
             result = run_sql(conn, sql)
+    except HTTPException as e:
+        # Propagate user-facing errors from run_sql
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"SQL execution failed: {e}")
 
