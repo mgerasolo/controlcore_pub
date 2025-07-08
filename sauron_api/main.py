@@ -71,7 +71,7 @@ def _extract_table_identifiers(stmt):
     return tables
 
 def strip_fake_schemas(sql: str) -> str:
-    """Remove schema prefixes for tables that don't exist in that schema."""
+    """Remove schema prefixes for tables that should not include them."""
     parsed = sqlparse.parse(sql)
     if not parsed:
         return sql
@@ -81,7 +81,13 @@ def strip_fake_schemas(sql: str) -> str:
     for ident in tables:
         schema = ident.get_parent_name()
         table = ident.get_real_name()
-        if schema and table and table not in DB_TABLES.get(schema, []):
+        if not schema or not table:
+            continue
+        if schema in DB_TABLES:
+            # Always strip prefixes matching known database names
+            replacements.append((f"{schema}.{table}", table))
+        elif table not in DB_TABLES.get(schema, []):
+            # Unknown schema/table combination
             replacements.append((f"{schema}.{table}", table))
     for old, new in replacements:
         sql = sql.replace(old, new)

@@ -104,7 +104,7 @@ def test_strip_keeps_valid_table(monkeypatch):
     })
     main.DB_TABLES = main.build_db_tables()
     sql = 'SELECT * FROM openweather_historical.fincastle_daily'
-    assert main.strip_fake_schemas(sql) == sql
+    assert main.strip_fake_schemas(sql) == 'SELECT * FROM fincastle_daily'
 
 
 def test_strip_removes_invalid_schema(monkeypatch):
