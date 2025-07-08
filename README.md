@@ -131,7 +131,70 @@ WHERE date BETWEEN '2020-06-01' AND '2020-06-30';
 
 So, our best case has stalled at bad reference to schema and a mistake in the table name. 
 
+-----
+UPDATE: Problems still with setting up a SQL request that mirrors reality.  Recommend add a first pass to LLM to reformat the request and present a simpler problem to the SQL generator.
+Example relating to a sensor:
 
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "What is the status of BeetsTomatoes-USSolid valve?"}'
+{"summary":"**Summary**\n\nThe BeetsTomatoes-USSolid valve has no running configuration applied. The query results are empty, indicating that there is no current configuration associated with this valve.\n\n**Chart Recommendation**\n\nA simple bar chart with a single category (valve name) would effectively illustrate the lack of data for this valve."}sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "What is the current state of BeetsTomatoes-USSolid valve?"}'
+{"summary":"**Valve Status: BeetsTomatoes-USSolid**\n\nThe current state of the BeetsTomatoes-USSolid valve shows no running configuration applied.\n\n**Recommendation:** A bar chart with categorical X-axis (e.g., \" Valve Status\") and a binary Y-axis (e.g., \"Applied\" vs. \"Not Applied\") would effectively visualize this data, highlighting the absence of any running configuration for this valve."}sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "Check the control log for recent events?"}'
+{"summary":"**Recent Events Summary**\nNo recent events have been reported to the controller log within the past 30 days. The query returned an empty result set.\n\n**Recommended Chart:**\nNone (no data available)"}sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "Check the control_log for recent command."}'
+{"detail":"SQL execution failed: syntax error at or near \"```\"\nLINE 1: ```sql\n        ^\n"}sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "Check the sensor_data for BeetsTomatoes-USSolid."}'
+{"detail":"SQL execution failed: syntax error at or near \"^C
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "Check the sensor_^Cta for BeetsTomatoes-USSolid."}'
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "Check the controlcore sensor_data for recent values."}'
+{"detail":"SQL execution failed: syntax error at or near \"```\"\nLINE 1: ```sql\n        ^\n"}sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$
+---
+Original SQL: SELECT running_config_applied
+FROM controlcore.controllers
+WHERE controller_id = 'BeetsTomatoes-USSolid' AND config_source = 'valve';
+Stripped SQL: SELECT running_config_applied
+FROM controllers
+WHERE controller_id = 'BeetsTomatoes-USSolid' AND config_source = 'valve';
+INFO:     127.0.0.1:34056 - "POST /chat HTTP/1.1" 200 OK
+Original SQL: SELECT running_config_applied
+FROM controlcore.controllers
+WHERE controller_id = 'BeetsTomatoes-USSolid';
+Stripped SQL: SELECT running_config_applied
+FROM controllers
+WHERE controller_id = 'BeetsTomatoes-USSolid';
+INFO:     127.0.0.1:39364 - "POST /chat HTTP/1.1" 200 OK
+Original SQL: SELECT * FROM controlcore.controller_health WHERE last_reported > (CURRENT_DATE - INTERVAL '30 days');
+Stripped SQL: SELECT * FROM controller_health WHERE last_reported > (CURRENT_DATE - INTERVAL '30 days');
+INFO:     127.0.0.1:37058 - "POST /chat HTTP/1.1" 200 OK
+Original SQL: ```sql
+SELECT * FROM controlcore.controllers WHERE controller_id = 'YOUR_CONTROLLER_ID' ORDER BY last_seen DESC LIMIT 1;
+```
+Stripped SQL: ```sql
+SELECT * FROM controllers WHERE controller_id = 'YOUR_CONTROLLER_ID' ORDER BY last_seen DESC LIMIT 1;
+```
+INFO:     127.0.0.1:37076 - "POST /chat HTTP/1.1" 500 Internal Server Error
+Original SQL: ```sql
+SELECT *
+FROM controlcore.controllers
+WHERE controller_id = 'BeetsTomatoes-USSolid'
+```
+Stripped SQL: ```sql
+SELECT *
+FROM controllers
+WHERE controller_id = 'BeetsTomatoes-USSolid'
+```
+INFO:     127.0.0.1:37298 - "POST /chat HTTP/1.1" 500 Internal Server Error
+Original SQL: ```sql
+SELECT * FROM controlcore.controllers WHERE controller_id = 'sensor_data' ORDER BY last_seen DESC LIMIT 1;
+```
+Stripped SQL: ```sql
+SELECT * FROM controllers WHERE controller_id = 'sensor_data' ORDER BY last_seen DESC LIMIT 1;
+```
+INFO:     127.0.0.1:46250 - "POST /chat HTTP/1.1" 500 Internal Server Error
+
+
+
+-----
 ## Long Term Goals
 - Prepare for containerization and field deployment
 - Simplify set up and component configuration
