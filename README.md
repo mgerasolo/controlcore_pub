@@ -102,7 +102,7 @@ chat requests to `SAURON_API_URL`.
 - Finish setting up basic AI SQL helper / research assistant / AI Chat Assistant
   -  It seems logical the first AI support would be to retrieve data from our storage systems
   -  We have started with a concept of llama3 and deepseek coding working in tandem to:
-    -  Interpret the user's request 
+    -  Interpret the user's request ---- now attempting vector steering
     -  Create a proper SQL query
     -  Send the query
     -  Interpret the data result in context to the request
@@ -114,40 +114,39 @@ Sauron - The machine running ControlCore main services - data gathering, sensors
 Gandalf - A separate machine on the same LAN (currently) with hardware more appropriate to running AI models
 
 
-Current Status - Getting Useful Results from curl:
------
-sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "Check the controlcore sensor_data for recent values."}'
-{"summary":"**Summary**\nThe most recent sensor readings from the garden-hydrant station show a wide range of values across various sensors. Water-pressure and flow rates indicate normal operation, while soil moisture levels suggest a relatively high level of hydration (748%). Temperature and humidity readings are stable at 24.27°C and 54.19%RH respectively. Light intensity is moderate at 956 lux.\n\n**Recommended Chart**\nConsider a scatter plot with X-axis \"Sensor Type\" and Y-axis \"Value\". This would allow for a visual comparison of the different sensor types and their corresponding values, providing insight into relationships between the sensors."}
-
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-Original SQL: SELECT *
-FROM sensor_data
-WHERE received_at = (SELECT MAX(received_at) FROM sensor_data);
-Stripped SQL: SELECT *
-FROM sensor_data
-WHERE received_at = (SELECT MAX(received_at) FROM sensor_data);
-INFO:     127.0.0.1:52272 - "POST /chat HTTP/1.1" 200 OK
-
-============
-
-sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat -H "Content-Type: application/json"   -d '{"question": "Provide details on the most recent control commands."}'
-{"summary":"# Control Command Summary\n\nThe most recent control command was executed on 2025-07-08 at 02:00:01 UTC. The command was to open the 'garden-hydrant' station using the 'uno-r4-wifi-primary' controller, triggered by the 'watering_runner' requestor. The command was received from the 'advisor_schedule' source and took approximately 3600 seconds (1 hour) to execute.\n\n**Chart Recommendation:** A simple bar chart with X-axis as timestamps and Y-axis as command types could provide a clear visual representation of control command history, allowing for easy identification of trends and patterns in command execution."}
-
----
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-Original SQL: SELECT *
-FROM control_log
-ORDER BY received_at DESC
-LIMIT 1;
-Stripped SQL: SELECT *
-FROM control_log
-ORDER BY received_at DESC
-LIMIT 1;
-INFO:     127.0.0.1:44610 - "POST /chat HTTP/1.1" 200 OK
-
-================================
+Current Status - Getting Useful SQL Queries:
 -----
 
+-  Attempt to use vectors to guide the models mid flight.
+
+  - Create program that feeds json formatted descriptions of the database schema, uses, intent, aliases, examples, etc into schema_embeddings as a vector
+    -  The user can update the json and overwrite / add to the schema vectors
+    -  The purpose is to give the NLP enough context to finally get useful SQL queries from it directly or through the coding model still
+
+  - User queries are then matched against the vectors for possible matches and the top best confidence options are returned for guidance
+
+  - postgres - pgvector is in use
+
+  - New controlcore database table for database schema vectors:
+CREATE TABLE schema_embeddings (
+  id serial PRIMARY KEY,
+  table_name text,
+  column_name text,
+  content text,
+  embedding vector(768),
+  source_file text,
+  entry_type text  -- alias | column | example | description
+);
+
+
+  - /database_schemas/vector_embeddings/ stores the json to be embedded
+
+  - adjust instructions, rails, guides, etc accordingly
+
+  - Use opensource / free options where available
+    -  ex: Embed your schema knowledge base (table/column/intents) via sentence-transformers
+
+-----
 ## Long Term Goals
 - Prepare for containerization and field deployment
 - Simplify set up and component configuration

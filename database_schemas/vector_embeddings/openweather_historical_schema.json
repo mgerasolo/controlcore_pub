@@ -1,0 +1,83 @@
+{
+  "database": "openweather_historical",
+  "description": "Historical OpenWeather data including hourly and daily weather summaries for various geographic locations.",
+  "tables": [
+    {
+      "table": "hourly_data",
+      "description": "Time-aligned weather observations including temperature, wind, and sky condition readings.",
+      "columns": {
+        "dt": "UNIX timestamp of the weather reading.",
+        "lat": "Latitude of the observation location.",
+        "lon": "Longitude of the observation location.",
+        "tz": "Time zone string, e.g., America/New_York.",
+        "tzoff": "Time zone offset in seconds from UTC.",
+        "temp": "Temperature in Celsius.",
+        "feels_like": "Perceived temperature in Celsius.",
+        "pressure": "Atmospheric pressure in hPa.",
+        "humidity": "Relative humidity in percentage.",
+        "dew_point": "Calculated dew point in Celsius.",
+        "description": "Text description of weather condition.",
+        "clouds": "Cloud cover in percentage.",
+        "wind_speed": "Wind speed in meters per second.",
+        "wind_deg": "Wind direction in degrees.",
+        "location_id": "Foreign key to location metadata."
+      },
+      "aliases": [
+        "hourly weather",
+        "wind report",
+        "humidity history",
+        "past weather",
+        "yesterday at",
+        "fincastle hourly",
+        "weather logs"
+      ],
+      "example_queries": [
+        "What was the temperature at noon yesterday?",
+        "Give me the wind speed at 3 AM on June 26.",
+        "Show hourly humidity for the last 48 hours.",
+        "When did it last say 'rain' in the description?"
+      ],
+      "physical_tables": [
+        "hourly_data",
+        "fincastle_hourly",
+        "rome_hourly"
+      ]
+    },
+    {
+      "table": "daily_summary_data",
+      "description": "Daily summaries of OpenWeather data including precipitation, humidity, temperature, and wind.",
+      "columns": {
+        "date": "UNIX timestamp representing the date.",
+        "precipitation_total": "Total precipitation in mm for the day.",
+        "temperature_min": "Minimum temperature observed.",
+        "temperature_max": "Maximum temperature observed.",
+        "temperature_afternoon": "Afternoon temperature reading.",
+        "humidity_afternoon": "Afternoon relative humidity.",
+        "wind_max_speed": "Maximum wind speed observed.",
+        "wind_max_direction": "Direction of the strongest wind.",
+        "location_id": "Foreign key to location metadata."
+      },
+      "aliases": [
+        "daily weather summary",
+        "precipitation by day",
+        "temperature highs and lows",
+        "fincastle daily",
+        "yesterday rain",
+        "total rain",
+        "recent high temperature",
+        "rain history"
+      ],
+      "physical_tables": [
+        "daily_summary_data",
+        "fincastle_daily",
+        "rome_daily"
+      ],
+      "example_queries": [
+        "How much did it rain last Thursday?",
+        "What was the hottest day last month?",
+        "Give me the windiest days this week.",
+        "Show all daily weather summaries for June."
+      ]
+    }
+  ]
+}

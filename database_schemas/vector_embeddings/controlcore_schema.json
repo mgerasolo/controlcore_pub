@@ -1,0 +1,57 @@
+{
+  "database": "controlcore",
+  "description": "Primary database for sensor logging, irrigation events, controller health, and internal system tracking.",
+  "tables": [
+    {
+      "table": "sensor_data",
+      "description": "Live time-series readings from all field sensors, including soil moisture, temperature, and rain gauges.",
+      "columns": {
+        "station_id": "ID of the station where the sensor is located.",
+        "controller_id": "Controller that received the reading.",
+        "sensor_id": "Unique identifier for the sensor.",
+        "sensor_type": "Type of sensor (e.g., moisture, temp, rain_gauge).",
+        "value": "Sensor reading value (float).",
+        "unit": "Unit of the sensor reading, e.g., %, °C.",
+        "received_at": "Timestamp when the data was received.",
+        "location_id": "Mapped location ID from the locations table."
+      },
+      "aliases": [
+        "soil moisture",
+        "latest rain reading",
+        "temperature readings",
+        "sensor history",
+        "last sensor report"
+      ],
+      "example_queries": [
+        "Show the latest soil moisture value.",
+        "What was the last rainfall amount?",
+        "Get all temperature readings from the past 6 hours.",
+        "What value did the controller see for moisture yesterday?"
+      ]
+    },
+    {
+      "table": "control_log",
+      "description": "Event log of control decisions including manual and automated irrigation commands.",
+      "columns": {
+        "station": "The station where the control event was issued.",
+        "sensor_id": "Sensor used to trigger the action.",
+        "command": "Type of action taken (e.g., open_valve, start_irrigation).",
+        "value": "Optional numeric value associated with command.",
+        "duration": "How long the action lasted (in seconds).",
+        "received_at": "Timestamp the action was logged."
+      },
+      "aliases": [
+        "watering log",
+        "last valve activation",
+        "irrigation record",
+        "pump on/off log"
+      ],
+      "example_queries": [
+        "When was the last watering in zone 2?",
+        "What command was issued for the tomatoes yesterday?",
+        "Show the last time any valve opened.",
+        "How long was the sprinkler on?"
+      ]
+    }
+  ]
+}

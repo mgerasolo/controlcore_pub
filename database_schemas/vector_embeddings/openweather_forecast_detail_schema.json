@@ -1,0 +1,37 @@
+{
+  "database": "openweather_forecast_detail",
+  "description": "Flattened forecast data including current, hourly, and multi-day future weather predictions from OpenWeather.",
+  "tables": [
+    {
+      "table": "forecast_detail_flat",
+      "description": "Highly denormalized view of forecast data including current conditions and up to 7 days of hourly and daily projections.",
+      "columns": {
+        "timestamp": "Datetime the forecast was pulled.",
+        "current_temp": "Current temperature (°F).",
+        "current_weather_description": "Weather condition, e.g., 'light rain'.",
+        "hour_0_temp": "Forecasted temperature at current hour.",
+        "hour_3_temp": "Forecasted temperature 3 hours from now.",
+        "hour_12_temp": "Forecasted temperature 12 hours from now.",
+        "hour_12_weather_main": "Primary condition at 12h (e.g., Clouds, Rain).",
+        "day_0_summary": "Description of today's overall weather.",
+        "day_1_temp_max": "Tomorrow's expected high temp.",
+        "day_3_weather_description": "Textual summary of weather 3 days out.",
+        "day_6_pop": "Probability of precipitation 6 days out.",
+        "last_updated": "When this record was last refreshed."
+      },
+      "aliases": [
+        "weather forecast",
+        "future rain prediction",
+        "what's the weather tomorrow",
+        "7-day outlook",
+        "hourly forecast"
+      ],
+      "example_queries": [
+        "Will it rain tomorrow?",
+        "Give me the temperature forecast for the next 6 hours.",
+        "How likely is rain 5 days from now?",
+        "What's the weather summary for the weekend?"
+      ]
+    }
+  ]
+}
