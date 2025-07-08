@@ -48,7 +48,10 @@ def run_chat(monkeypatch, sql, question="what?", rephrased="clean"):
         captured['args'] = (db, user_var, pw_var)
         return DummyConn()
     monkeypatch.setattr(main, 'connect_using_env', fake_connect)
-    monkeypatch.setattr(main, 'run_sql', lambda conn, q: captured.setdefault('query', q) or [])
+    def fake_run_sql(conn, q):
+        captured.setdefault('query', q)
+        return []
+    monkeypatch.setattr(main, 'run_sql', fake_run_sql)
 
     client = TestClient(main.app)
     resp = client.post('/chat', json={'question': question})
@@ -95,3 +98,12 @@ def test_strip_keeps_valid_table():
 def test_strip_removes_invalid_schema():
     sql = 'SELECT * FROM openweather_forecast.controllers'
     assert main.strip_fake_schemas(sql) == 'SELECT * FROM controllers'
+
+
+def test_chat_rejects_invalid_sql(monkeypatch):
+    monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
+    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient('SELECT (', 'bad', 'clean'))
+    client = TestClient(main.app)
+    resp = client.post('/chat', json={'question': 'bad'})
+    assert resp.status_code == 400
+    assert 'unbalanced' in resp.json()['detail'] or 'invalid' in resp.json()['detail']

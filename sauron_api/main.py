@@ -106,6 +106,23 @@ def clean_sql_block(query: str) -> str:
     stmt = parsed[0].value.strip()
     return stmt
 
+def validate_sql(query: str) -> None:
+    """Perform basic sanity checks on the SQL before execution."""
+    stripped = query.strip()
+    if not stripped:
+        raise ValueError("empty SQL")
+    # Simple balanced parentheses check
+    depth = 0
+    for ch in stripped:
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+            if depth < 0:
+                raise ValueError("unbalanced parentheses")
+    if depth != 0:
+        raise ValueError("unbalanced parentheses")
+
 # Map database names to the environment variables holding credentials
 DB_USER_VARS = {
     "controlcore": ("CONTROLCORE_USER", "CONTROLCORE_PW"),
@@ -135,6 +152,11 @@ async def chat(req: ChatRequest):
     detected = db_from_sql(sql)
     sql = strip_fake_schemas(sql)
     sql = clean_sql_block(sql)
+
+    try:
+        validate_sql(sql)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     print("Stripped SQL:", sql)
 

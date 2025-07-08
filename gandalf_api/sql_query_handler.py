@@ -28,6 +28,8 @@ def build_sql_prompt(question: str, schema: str) -> str:
 Schema:
 {schema}
 
+Use **only** the table names exactly as they appear in the schema above. Do not guess or invent new table names.
+
 User question:
 {question}
 
@@ -68,7 +70,11 @@ async def call_ollama(prompt: str, model: str) -> str:
 
 @app.post("/rephrase")
 async def rephrase(req: RephraseRequest):
-    prompt = f"Clean and simplify this question for a coding model:\n{req.text}"
+    prompt = (
+        "Clean and simplify this question for a coding model. "
+        "Clarify any ambiguous date ranges or metrics if possible:\n"
+        f"{req.text}"
+    )
     response = await call_ollama(prompt, model="llama3")
     return {"text": response}
 
