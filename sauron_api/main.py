@@ -189,7 +189,10 @@ async def chat(req: ChatRequest):
         rep_resp.raise_for_status()
         clean_q = rep_resp.json().get("text", req.question)
 
-        gen_resp = await client.post(GANDALF_SQL_URL, json={"question": clean_q, "schema": schema})
+        gen_resp = await client.post(
+            GANDALF_SQL_URL,
+            json={"question": f"{clean_q} postgres", "schema": schema}
+        )
         gen_resp.raise_for_status()
         sql = gen_resp.json().get("sql")
 

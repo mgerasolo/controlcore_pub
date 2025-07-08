@@ -14,4 +14,5 @@ manual updates.
 
 When Gandalf is asked to generate SQL, the schema is supplied in a JSON block grouped by database
 name. Each database is independent; table names should be referenced directly without including the
-database prefix. The example query in the prompt shows this style (`SELECT * FROM table LIMIT 5;`).
+database prefix. The prompt explicitly mentions that the databases use PostgreSQL so the language
+model emits that dialect. The example query in the prompt shows this style (`SELECT * FROM table LIMIT 5;`).

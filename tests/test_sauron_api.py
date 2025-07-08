@@ -27,7 +27,7 @@ class DummyClient:
             assert json['text'] == self.question
             return DummyResp({'text': self.rephrased})
         if url.endswith('/generate-sql'):
-            assert json['question'] == self.rephrased
+            assert json['question'] == f"{self.rephrased} postgres"
             assert json['schema'] == 'schema'
             return DummyResp({'sql': self.sql})
         if url.endswith('/analyze'):
