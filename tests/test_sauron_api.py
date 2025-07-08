@@ -14,14 +14,21 @@ class DummyResp:
         return self._data
 
 class DummyClient:
-    def __init__(self, sql):
+    def __init__(self, sql, question, rephrased):
         self.sql = sql
+        self.question = question
+        self.rephrased = rephrased
     async def __aenter__(self):
         return self
     async def __aexit__(self, exc_type, exc, tb):
         pass
     async def post(self, url, json):
+        if url.endswith('/rephrase'):
+            assert json['text'] == self.question
+            return DummyResp({'text': self.rephrased})
         if url.endswith('/generate-sql'):
+            assert json['question'] == self.rephrased
+            assert json['schema'] == 'schema'
             return DummyResp({'sql': self.sql})
         if url.endswith('/analyze'):
             return DummyResp({'answer': 'hello', 'display': {'type': 'text'}})
@@ -33,10 +40,10 @@ class DummyConn:
     def __exit__(self, exc_type, exc, tb):
         pass
 
-def run_chat(monkeypatch, sql, question="what?"):
+def run_chat(monkeypatch, sql, question="what?", rephrased="clean"):
     captured = {}
     monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
-    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient(sql))
+    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient(sql, question, rephrased))
     def fake_connect(db, user_var, pw_var):
         captured['args'] = (db, user_var, pw_var)
         return DummyConn()
@@ -74,6 +81,10 @@ def test_sql_overrides_question(monkeypatch):
     # question mentions historical but SQL uses forecast schema
     args = run_chat(monkeypatch, sql, question='show me historical data')
     assert args == ('openweather_forecast', 'OPENFORE_USER', 'OPENFORE_PW')
+
+
+def test_chat_rephrase(monkeypatch):
+    run_chat(monkeypatch, 'SELECT 1', question='orig', rephrased='cleaned')
 
 
 def test_strip_keeps_valid_table():
