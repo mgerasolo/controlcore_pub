@@ -55,7 +55,8 @@ def run_sql(conn, query: str) -> List[dict]:
 
     with conn.cursor() as cur:
         cur.execute(query)
-        colnames = [desc[0] for desc in (cur.description or [])]
+        description = getattr(cur, "description", None) or []
+        colnames = [desc[0] for desc in description]
         rows = cur.fetchall()
 
     return [dict(zip(colnames, row)) for row in rows]
