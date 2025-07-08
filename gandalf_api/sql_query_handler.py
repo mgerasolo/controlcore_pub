@@ -23,18 +23,29 @@ class RephraseRequest(BaseModel):
     text: str
 
 def build_sql_prompt(question: str, schema: str) -> str:
-    return f"""You are an AI assistant that generates SQL queries for weather and environmental databases.
+    """Return the prompt for the SQL‑generation model.
 
-Schema:
-{schema}
+    The schema may be a markdown list of tables and columns.  Present it in a
+    JSON code block so the language model receives a compact representation.
+    A short example query is included before the actual user question to
+    demonstrate the expected table reference format.
+    """
 
-Use **only** the table names exactly as they appear in the schema above. Do not guess or invent new table names.
+    example = "SELECT * FROM database.table LIMIT 5;"
+    formatted_schema = f"```json\n{schema}\n```"
 
-User question:
-{question}
-
-Only return a valid SQL query. Do not explain it.
-"""
+    return (
+        "You are an AI assistant that generates SQL queries for weather and "
+        "environmental databases.\n\n"
+        f"Schema:\n{formatted_schema}\n\n"
+        "Example query using the schema above:\n"
+        f"```sql\n{example}\n```\n\n"
+        "Use **only** the table names exactly as they appear in the schema. Do "
+        "not guess or invent new table names.\n\n"
+        "User question:\n"
+        f"{question}\n\n"
+        "Only return a valid SQL query. Do not explain it."
+    )
 
 def build_summary_prompt(question: str, sql: str, rows: list[dict]) -> str:
     return f"""You are a Markdown report writer for a weather analytics system.
