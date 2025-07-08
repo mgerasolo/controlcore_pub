@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import ReactMarkdown from "react-markdown"
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -104,13 +105,25 @@ export default function AIPage() {
         body: JSON.stringify({ message: text }),
       })
 
-      if (!res.ok) {
-        throw new Error(`Request failed with status ${res.status}`)
+      let data: any = null
+      try {
+        data = await res.json()
+      } catch {
+        // response may not be JSON
       }
 
-      const data = await res.json()
+      if (!res.ok) {
+        const errorMsg =
+          data?.detail || data?.error || `Request failed with status ${res.status}`
+        throw new Error(errorMsg)
+      }
+
       const responseText =
-        data.answer || data.response || data.message || JSON.stringify(data)
+        data?.summary ||
+        data?.answer ||
+        data?.response ||
+        data?.message ||
+        JSON.stringify(data)
 
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -120,12 +133,12 @@ export default function AIPage() {
       }
 
       setMessages((prev) => [...prev, aiMessage])
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI chat error", err)
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Sorry, there was an error processing your request.",
+        content: err?.message || "Sorry, there was an error processing your request.",
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, aiMessage])
@@ -222,7 +235,7 @@ export default function AIPage() {
                                   : "bg-gray-100 text-gray-900"
                               }`}
                             >
-                              <div className="text-sm whitespace-pre-line">{message.content}</div>
+                              <ReactMarkdown className="text-sm whitespace-pre-line">{message.content}</ReactMarkdown>
                               <div
                                 className={`text-xs mt-1 ${message.role === "user" ? "text-purple-100" : "text-gray-500"}`}
                               >
