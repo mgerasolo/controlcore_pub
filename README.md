@@ -140,6 +140,8 @@ CREATE TABLE schema_embeddings (
 
 
   - /database_schemas/vector_embeddings/ stores the json to be embedded
+  - Run `python scripts/load_schema_vectors.py` after editing these files to
+    refresh the `schema_embeddings` table
 
   - adjust instructions, rails, guides, etc accordingly
 
