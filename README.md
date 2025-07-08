@@ -73,6 +73,7 @@ Each core script writes execution details to its own log file under
 - `master.log`
 
 See [docs/forecast_accuracy.md](docs/forecast_accuracy.md) for details on the forecast regression workflow.
+See [docs/schema_introspection.md](docs/schema_introspection.md) for how table schema information is gathered.
 
 ### FastAPI Server
 

@@ -63,26 +63,27 @@ def test_fetch_schema_builds_mapping(monkeypatch):
 
 
 def test_collect_table_schema_aggregates(monkeypatch):
-    calls = []
+    fetch_calls = []
 
     def fake_fetch(db, tables):
-        calls.append((db, tuple(tables)))
-        if db == 'openweather_historical':
-            return {'fincastle_daily': [{'name': 'date', 'type': 'int'}]}
-        if db == 'openweather_forecast':
-            return {'forecast_data': [{'name': 'date', 'type': 'int'}]}
+        fetch_calls.append((db, tuple(tables)))
+        return {t: [{'name': 'id', 'type': 'int'}] for t in tables}
+
+    def fake_list(db):
         return {
-            'controllers': [{'name': 'controller_id', 'type': 'text'}],
-            'controller_health': [{'name': 'controller_id', 'type': 'text'}],
-        }
+            'controlcore': ['controllers', 'controller_health'],
+            'openweather_historical': ['fincastle_daily'],
+            'openweather_forecast': ['forecast_data'],
+        }[db]
 
     monkeypatch.setattr('shared.table_schema.fetch_schema', fake_fetch)
+    monkeypatch.setattr('shared.table_schema.list_public_tables', fake_list)
 
     md = collect_table_schema('ignored')
 
-    assert ('controlcore', ('controllers', 'controller_health')) in calls
-    assert ('openweather_historical', ('fincastle_daily',)) in calls
-    assert ('openweather_forecast', ('forecast_data',)) in calls
+    assert ('controlcore', ('controllers', 'controller_health')) in fetch_calls
+    assert ('openweather_historical', ('fincastle_daily',)) in fetch_calls
+    assert ('openweather_forecast', ('forecast_data',)) in fetch_calls
     assert '# Available Databases and Tables' in md
     assert '## controlcore' in md
     assert '- controllers(' in md
