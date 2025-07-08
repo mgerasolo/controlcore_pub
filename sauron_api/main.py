@@ -3,26 +3,39 @@ from pydantic import BaseModel
 import os
 import psycopg2
 import httpx
+import re
 
 from shared import load_environment, connect_using_env
 from shared.table_schema import collect_table_schema
-from sauron_api.sql_utils import run_sql
 
 load_environment()
 
 app = FastAPI()
 
-GANDALF_SQL_URL = os.getenv("GANDALF_SQL_URL", "http://192.168.100.40:9001/generate-sql")
-GANDALF_ANALYZE_URL = os.getenv("GANDALF_ANALYZE_URL", "http://192.168.100.40:9001/analyze")
+GANDALF_SQL_URL = os.getenv("GANDALF_SQL_URL", "http://localhost:9001/generate-sql")
+GANDALF_ANALYZE_URL = os.getenv("GANDALF_ANALYZE_URL", "http://localhost:9001/analyze")
 
 class ChatRequest(BaseModel):
     question: str
+
+def strip_fake_schemas(sql: str) -> str:
+    """Removes hallucinated schema prefixes like openweather_forecast.*"""
+    return re.sub(r"\b(openweather_forecast|openweather_historical|controlcore)\.", "", sql)
+
+def guess_db(question: str) -> str:
+    q = question.lower()
+    if "forecast" in q or "predicted" in q:
+        return "openweather_forecast"
+    elif "rain" in q or "historical" in q or "temperature in" in q:
+        return "openweather_historical"
+    else:
+        return "controlcore"
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
     schema = collect_table_schema(req.question)
 
-    # Step 1: Get SQL from Gandalf
+    # Step 1: Ask Gandalf to generate SQL
     async with httpx.AsyncClient() as client:
         gen_resp = await client.post(GANDALF_SQL_URL, json={"question": req.question, "schema": schema})
         gen_resp.raise_for_status()
@@ -31,33 +44,29 @@ async def chat(req: ChatRequest):
     if not sql:
         raise HTTPException(status_code=500, detail="Gandalf did not return SQL")
 
-    # Step 2: Determine which DB to query and execute
-    db = "controlcore"
-    user_var = "CONTROLCORE_USER"
-    pw_var = "CONTROLCORE_PW"
-    lowered_sql = sql.lower()
-    if "openweather_historical." in lowered_sql:
-        db = "openweather_historical"
-        user_var = "OPENHIST_USER"
-        pw_var = "OPENHIST_PW"
-    elif "openweather_forecast." in lowered_sql:
-        db = "openweather_forecast"
-        user_var = "OPENFORE_USER"
-        pw_var = "OPENFORE_PW"
+    print("Original SQL:", sql)
+    sql = strip_fake_schemas(sql)
+    print("Stripped SQL:", sql)
+
+    # Step 2: Pick database connection
+    dbname = guess_db(req.question)
 
     try:
-        with connect_using_env(db, user_var, pw_var) as conn:
-            print(sql)
-            rows = run_sql(conn, sql)
+        with connect_using_env(dbname, "PG_USER", "PG_PASSWORD") as conn:
+            with conn.cursor() as cur:
+                cur.execute(sql)
+                rows = cur.fetchall()
+                colnames = [desc[0] for desc in cur.description]
+                result = [dict(zip(colnames, row)) for row in rows]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"SQL execution failed: {e}")
 
-    # Step 3: Send results to Gandalf for analysis
+    # Step 3: Ask Gandalf to analyze
     async with httpx.AsyncClient() as client:
         final_resp = await client.post(GANDALF_ANALYZE_URL, json={
             "question": req.question,
             "sql": sql,
-            "rows": rows
+            "rows": result
         })
         final_resp.raise_for_status()
         data = final_resp.json()
