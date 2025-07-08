@@ -14,7 +14,7 @@ settings used by all modules. Set `NEXT_PUBLIC_MQTT_WS_URL` to the WebSocket URL
 for your broker (e.g. `ws://localhost:9001`). Install the Python dependencies
 with `pip install -r requirements.txt` and the test packages with
 `pip install -r requirements-dev.txt` after creating your virtual environment.
-Both requirement files must be installed before running the unit tests.
+Both requirement files must be installed before running `pytest`.
 Specify `BASELINE_SENSOR_ID` with the `source_id` of your on-site temperature
 sensor so the weather page can display the most recent reading.
 Set `OPENWEATHER_ARCHIVE_CUTOFF_DAYS` to control how old weather data must be before
