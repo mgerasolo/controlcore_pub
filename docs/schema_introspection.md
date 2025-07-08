@@ -1,0 +1,13 @@
+# Schema Introspection
+
+The API needs a concise description of all database tables so Gandalf can craft valid SQL queries.
+`collect_table_schema` queries each configured database and builds a markdown listing of tables and columns.
+
+1. `list_public_tables` connects to a database using credentials from environment variables and reads
+   `information_schema.tables` for the `public` schema. This returns every base table name.
+2. For the tables returned, `fetch_schema` pulls column names and data types from
+   `information_schema.columns`.
+3. The results are formatted into a single markdown string used by the LLM.
+
+This dynamic approach ensures the schema information always matches the actual databases without
+manual updates.

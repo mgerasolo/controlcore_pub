@@ -1,15 +1,16 @@
-from .schema_introspect import fetch_schema
+from .schema_introspect import fetch_schema, list_public_tables
 
 
 def collect_table_schema(_: str) -> str:
-    db_tables = {
-        "openweather_historical": ["fincastle_daily"],
-        "openweather_forecast": ["forecast_data"],
-        "controlcore": ["controllers", "controller_health"],
-    }
+    dbnames = [
+        "openweather_historical",
+        "openweather_forecast",
+        "controlcore",
+    ]
 
     lines = ["# Available Databases and Tables", ""]
-    for dbname, tables in db_tables.items():
+    for dbname in dbnames:
+        tables = list_public_tables(dbname)
         schema = fetch_schema(dbname, tables)
         lines.append(f"## {dbname}")
         for table in tables:

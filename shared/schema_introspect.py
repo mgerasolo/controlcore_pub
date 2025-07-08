@@ -44,3 +44,21 @@ def fetch_schema(dbname: str, tables: List[str]) -> Dict[str, List[dict]]:
         schema.setdefault(table_name, []).append({"name": column_name, "type": data_type})
 
     return schema
+
+
+def list_public_tables(dbname: str) -> List[str]:
+    """Return all table names in the public schema of a database."""
+    user_var, pw_var = USER_VARS.get(dbname, ("PG_USER", "PG_PASSWORD"))
+    try:
+        with connect_using_env(dbname, user_var, pw_var) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT table_name FROM information_schema.tables "
+                    "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' "
+                    "ORDER BY table_name"
+                )
+                rows = cur.fetchall()
+    except Exception:
+        return []
+
+    return [r[0] for r in rows]
