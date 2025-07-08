@@ -6,6 +6,7 @@ import httpx
 import re
 
 from shared import load_environment, connect_using_env
+from sauron_api.sql_utils import run_sql
 from shared.table_schema import collect_table_schema
 
 load_environment()
@@ -31,6 +32,13 @@ def guess_db(question: str) -> str:
     else:
         return "controlcore"
 
+# Map database names to the environment variables holding credentials
+DB_USER_VARS = {
+    "controlcore": ("CONTROLCORE_USER", "CONTROLCORE_PW"),
+    "openweather_historical": ("OPENHIST_USER", "OPENHIST_PW"),
+    "openweather_forecast": ("OPENFORE_USER", "OPENFORE_PW"),
+}
+
 @app.post("/chat")
 async def chat(req: ChatRequest):
     schema = collect_table_schema(req.question)
@@ -52,12 +60,9 @@ async def chat(req: ChatRequest):
     dbname = guess_db(req.question)
 
     try:
-        with connect_using_env(dbname, "PG_USER", "PG_PASSWORD") as conn:
-            with conn.cursor() as cur:
-                cur.execute(sql)
-                rows = cur.fetchall()
-                colnames = [desc[0] for desc in cur.description]
-                result = [dict(zip(colnames, row)) for row in rows]
+        user_var, pw_var = DB_USER_VARS.get(dbname, ("PG_USER", "PG_PASSWORD"))
+        with connect_using_env(dbname, user_var, pw_var) as conn:
+            result = run_sql(conn, sql)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"SQL execution failed: {e}")
 
