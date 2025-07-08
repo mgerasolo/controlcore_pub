@@ -14,10 +14,11 @@ class DummyResp:
         return self._data
 
 class DummyClient:
-    def __init__(self, sql, question, rephrased):
+    def __init__(self, sql, question, rephrased, context):
         self.sql = sql
         self.question = question
         self.rephrased = rephrased
+        self.context = context
     async def __aenter__(self):
         return self
     async def __aexit__(self, exc_type, exc, tb):
@@ -29,6 +30,7 @@ class DummyClient:
         if url.endswith('/generate-sql'):
             assert json['question'] == f"{self.rephrased} postgres"
             assert json['schema'] == 'schema'
+            assert json['context'] == self.context
             return DummyResp({'sql': self.sql})
         if url.endswith('/analyze'):
             return DummyResp({'answer': 'hello', 'display': {'type': 'text'}})
@@ -40,10 +42,17 @@ class DummyConn:
     def __exit__(self, exc_type, exc, tb):
         pass
 
-def run_chat(monkeypatch, sql, question="what?", rephrased="clean"):
+def run_chat(monkeypatch, sql, question="what?", rephrased="clean", context=None):
     captured = {}
+    run_chat.last_retrieved = None
+    if context is None:
+        context = []
     monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
-    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient(sql, question, rephrased))
+    def fake_retrieve(q, top_n=5):
+        captured['retrieved'] = q
+        return context
+    monkeypatch.setattr(main, 'retrieve_schema_context', fake_retrieve)
+    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient(sql, question, rephrased, context))
     monkeypatch.setattr(main, 'build_db_tables', lambda: {
         'openweather_historical': ['fincastle_daily'],
         'openweather_forecast': ['forecast_data'],
@@ -64,7 +73,10 @@ def run_chat(monkeypatch, sql, question="what?", rephrased="clean"):
     assert resp.status_code == 200
     assert resp.json()['answer'] == 'hello'
     assert captured['query'] == main.strip_fake_schemas(sql)
+    run_chat.last_retrieved = captured.get('retrieved')
     return captured['args']
+
+run_chat.last_retrieved = None
 
 def test_chat_controlcore(monkeypatch):
     args = run_chat(monkeypatch, 'SELECT * FROM controllers')
@@ -96,6 +108,12 @@ def test_chat_rephrase(monkeypatch):
     run_chat(monkeypatch, 'SELECT 1', question='orig', rephrased='cleaned')
 
 
+def test_chat_uses_schema_context(monkeypatch):
+    ctx = [{'table': 'controllers', 'column': None, 'description': 'desc'}]
+    run_chat(monkeypatch, 'SELECT 1', context=ctx)
+    assert run_chat.last_retrieved == 'clean'
+
+
 def test_strip_keeps_valid_table(monkeypatch):
     monkeypatch.setattr(main, 'build_db_tables', lambda: {
         'openweather_historical': ['fincastle_daily'],
@@ -120,7 +138,8 @@ def test_strip_removes_invalid_schema(monkeypatch):
 
 def test_chat_rejects_invalid_sql(monkeypatch):
     monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
-    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient('SELECT (', 'bad', 'clean'))
+    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient('SELECT (', 'bad', 'clean', []))
+    monkeypatch.setattr(main, 'retrieve_schema_context', lambda q, top_n=5: [])
     client = TestClient(main.app)
     resp = client.post('/chat', json={'question': 'bad'})
     assert resp.status_code == 400
@@ -129,7 +148,8 @@ def test_chat_rejects_invalid_sql(monkeypatch):
 
 def test_chat_rejects_unknown_table(monkeypatch):
     monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
-    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient('SELECT * FROM missing_table', 'q', 'clean'))
+    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient('SELECT * FROM missing_table', 'q', 'clean', []))
+    monkeypatch.setattr(main, 'retrieve_schema_context', lambda q, top_n=5: [])
     # limit known tables
     monkeypatch.setattr(main, 'build_db_tables', lambda: {
         'openweather_historical': ['fincastle_daily'],

@@ -8,6 +8,14 @@ import sqlparse
 import json
 import datetime
 import logging
+try:
+    from sentence_transformers import SentenceTransformer
+except Exception:  # pragma: no cover - optional dependency
+    SentenceTransformer = None  # type: ignore
+try:
+    from pgvector.psycopg2 import register_vector
+except Exception:  # pragma: no cover - optional dependency
+    register_vector = None  # type: ignore
 from sqlparse.sql import Identifier, IdentifierList
 from sqlparse.tokens import Keyword, Whitespace
 
@@ -179,6 +187,46 @@ DB_USER_VARS = {
     "openweather_forecast": ("OPENFORE_USER", "OPENFORE_PW"),
 }
 
+# Model used for schema embeddings
+SCHEMA_MODEL_NAME = "all-mpnet-base-v2"
+from typing import Any
+
+_schema_model: Any = None
+
+
+def _get_schema_model() -> SentenceTransformer:
+    """Return a cached embedding model instance."""
+    if SentenceTransformer is None:
+        raise RuntimeError("sentence-transformers is not installed")
+    global _schema_model
+    if _schema_model is None:
+        _schema_model = SentenceTransformer(SCHEMA_MODEL_NAME)
+    return _schema_model
+
+
+def retrieve_schema_context(question: str, top_n: int = 5) -> list[dict]:
+    """Return top matching schema snippets for the question."""
+    model = _get_schema_model()
+    vector = model.encode(question).tolist()
+    if register_vector is None:
+        raise RuntimeError("pgvector is not installed")
+
+    with connect_using_env("controlcore", "CONTROLCORE_USER", "CONTROLCORE_PW") as conn:
+        register_vector(conn)
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT table_name, column_name, content "
+                "FROM schema_embeddings "
+                "ORDER BY embedding <-> %s LIMIT %s",
+                (vector, top_n),
+            )
+            rows = cur.fetchall()
+
+    return [
+        {"table": t, "column": c, "description": d}
+        for t, c, d in rows
+    ]
+
 @app.post("/chat")
 async def chat(req: ChatRequest):
     schema = collect_table_schema(req.question)
@@ -189,9 +237,11 @@ async def chat(req: ChatRequest):
         rep_resp.raise_for_status()
         clean_q = rep_resp.json().get("text", req.question)
 
+        context = retrieve_schema_context(clean_q)
+
         gen_resp = await client.post(
             GANDALF_SQL_URL,
-            json={"question": f"{clean_q} postgres", "schema": schema}
+            json={"question": f"{clean_q} postgres", "schema": schema, "context": context}
         )
         gen_resp.raise_for_status()
         sql = gen_resp.json().get("sql")
