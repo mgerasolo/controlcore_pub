@@ -44,6 +44,12 @@ def run_chat(monkeypatch, sql, question="what?", rephrased="clean"):
     captured = {}
     monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
     monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient(sql, question, rephrased))
+    monkeypatch.setattr(main, 'build_db_tables', lambda: {
+        'openweather_historical': ['fincastle_daily'],
+        'openweather_forecast': ['forecast_data'],
+        'controlcore': ['controllers', 'controller_health'],
+    })
+    main.DB_TABLES = main.build_db_tables()
     def fake_connect(db, user_var, pw_var):
         captured['args'] = (db, user_var, pw_var)
         return DummyConn()
@@ -119,3 +125,21 @@ def test_chat_rejects_invalid_sql(monkeypatch):
     resp = client.post('/chat', json={'question': 'bad'})
     assert resp.status_code == 400
     assert 'unbalanced' in resp.json()['detail'] or 'invalid' in resp.json()['detail']
+
+
+def test_chat_rejects_unknown_table(monkeypatch):
+    monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
+    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient('SELECT * FROM missing_table', 'q', 'clean'))
+    # limit known tables
+    monkeypatch.setattr(main, 'build_db_tables', lambda: {
+        'openweather_historical': ['fincastle_daily'],
+        'openweather_forecast': ['forecast_data'],
+        'controlcore': ['controllers', 'controller_health'],
+    })
+    main.DB_TABLES = main.build_db_tables()
+    # prevent accidental DB connection if validation fails
+    monkeypatch.setattr(main, 'connect_using_env', lambda *a, **k: (_ for _ in ()).throw(AssertionError('should not connect')))
+    client = TestClient(main.app)
+    resp = client.post('/chat', json={'question': 'q'})
+    assert resp.status_code == 400
+    assert resp.json()['detail'].startswith('unknown table:')

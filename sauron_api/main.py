@@ -119,6 +119,33 @@ def clean_sql_block(query: str) -> str:
     stmt = parsed[0].value.strip()
     return stmt
 
+def validate_tables(sql: str) -> None:
+    """Ensure all referenced tables exist in the known schemas."""
+    parsed = sqlparse.parse(sql)
+    if not parsed:
+        return
+
+    stmt = parsed[0]
+    identifiers = _extract_table_identifiers(stmt)
+
+    # Build a set of valid table names without schema for quick lookup
+    all_tables = set()
+    for tables in DB_TABLES.values():
+        all_tables.update(tables)
+
+    for ident in identifiers:
+        table = ident.get_real_name()
+        if not table:
+            continue
+        schema = ident.get_parent_name()
+        if schema:
+            if table not in DB_TABLES.get(schema, []):
+                raise HTTPException(status_code=400, detail=f"unknown table: {table}")
+        else:
+            if table not in all_tables:
+                raise HTTPException(status_code=400, detail=f"unknown table: {table}")
+
+
 def validate_sql(query: str) -> None:
     """Perform basic sanity checks on the SQL before execution."""
     stripped = query.strip()
@@ -165,6 +192,7 @@ async def chat(req: ChatRequest):
     detected = db_from_sql(sql)
     sql = strip_fake_schemas(sql)
     sql = clean_sql_block(sql)
+    validate_tables(sql)
 
     try:
         validate_sql(sql)
