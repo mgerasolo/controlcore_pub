@@ -32,6 +32,14 @@ def guess_db(question: str) -> str:
     else:
         return "controlcore"
 
+def db_from_sql(sql: str) -> str | None:
+    sql_lower = sql.lower()
+    if "openweather_forecast." in sql_lower:
+        return "openweather_forecast"
+    if "openweather_historical." in sql_lower:
+        return "openweather_historical"
+    return None
+
 # Map database names to the environment variables holding credentials
 DB_USER_VARS = {
     "controlcore": ("CONTROLCORE_USER", "CONTROLCORE_PW"),
@@ -53,11 +61,13 @@ async def chat(req: ChatRequest):
         raise HTTPException(status_code=500, detail="Gandalf did not return SQL")
 
     print("Original SQL:", sql)
+
+    detected = db_from_sql(sql)
     sql = strip_fake_schemas(sql)
     print("Stripped SQL:", sql)
 
     # Step 2: Pick database connection
-    dbname = guess_db(req.question)
+    dbname = detected or guess_db(req.question)
 
     try:
         user_var, pw_var = DB_USER_VARS.get(dbname, ("PG_USER", "PG_PASSWORD"))
