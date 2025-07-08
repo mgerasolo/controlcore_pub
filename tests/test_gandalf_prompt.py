@@ -14,3 +14,4 @@ def test_build_sql_prompt_includes_example_and_schema():
     assert 'User question:' in prompt
     assert 'show data' in prompt
     assert 'without prefixing' in prompt
+    assert 'postgres' in prompt.lower()

@@ -36,7 +36,7 @@ def build_sql_prompt(question: str, schema: str) -> str:
 
     return (
         "You are an AI assistant that generates SQL queries for weather and "
-        "environmental databases.\n\n"
+        "environmental databases. The databases use PostgreSQL syntax.\n\n"
         f"Schema:\n{formatted_schema}\n\n"
         "Each listed database is separate. Use table names directly without "
         "prefixing them with the database name.\n\n"
@@ -45,7 +45,7 @@ def build_sql_prompt(question: str, schema: str) -> str:
         "Use **only** the table names exactly as they appear in the schema. Do "
         "not guess or invent new table names.\n\n"
         "User question:\n"
-        f"{question}\n\n"
+        f"{question} postgres\n\n"
         "Only return a valid SQL query. Do not explain it."
     )
 
