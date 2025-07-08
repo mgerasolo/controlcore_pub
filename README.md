@@ -82,26 +82,46 @@ The server listens on port 8000 and uses `DEEPSEEK_URL` for SQL generation and a
 
 ## Short Term Goals
 
-- Continue wiring the features of the front end to the data, control, and messaging of the backend
-  - The stations page still has the Quick Controls buttons greyed out
-    - Might be related to the Station Status showing Offline, despite being live
+- Finish setting up basic AI SQL helper / research assistant / AI Chat Assistant
+  -  It seems logical the first AI support would be to retrieve data from our storage systems
+  -  We have started with a concept of llama3 and deepseek coding working in tandem to:
+    -  Interpret the user's request 
+    -  Create a proper SQL query
+    -  Send the query
+    -  Interpret the data result in context to the request
+    -  Send a response that is rich and web friendly
+    -  Display the response to the user
 
-  - Use data manager or similar to populate controller_health
-    - Can note if controller id seen in MQTT messages matches controllers table
-    - Stations page et al, can use the controller_health information
+Naming convention for clarity:
+Sauron - The machine running ControlCore main services - data gathering, sensors, controllers, MQTT, Postgres
+Gandalf - A separate machine on the same LAN (currently) with hardware more appropriate to running AI models
 
-controlcore=> select * from controllers;
-    controller_id    |   station_id   |           last_seen           | config_source | startup_config_hash | running_config_applied
----------------------+----------------+-------------------------------+---------------+---------------------+------------------------
- uno-r4-wifi-primary | garden-hydrant | 2025-07-01 16:40:53.093123-04 | demo-seed     |                     | f
-(1 row)
+This may actually be similar to a real deployment. 
 
-controlcore=> select * from controller_health ;
- controller_id | last_reported | issue | severity | notes
----------------+---------------+-------+----------+-------
-(0 rows)
+Our current largest problem is the AI agents on Gandalf arent aware of, not just the database schema, but that there are three databases.
+We have a concept of database structure:
+controlcore - the database used by the application for sensors, control, tracking, etc - essentially immutable in definitions
+openweather_historical - external, potentially large, historical records the user can provide or, in this bundle, the OpenWeather sub app can build
+openweather_forecast - external, volitile database of records that frequently change - in our cast forecasts also provided by OpenWeather
 
+We are hoping this separation helps containerization and customization in the future.
 
+What we have tried to send it so far with the references in /shared resulted in a lack of handling the three databases. 
+
+ie. 
+sauron@sauron:~/projects/codex_controlcore_agg/sauron_api$ curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How much rain did Fincastle get in June 2020?"}'
+{"detail":"SQL execution failed: only SELECT queries are allowed"}
+
+(cc_data_manager) sauron@sauron:~/projects/codex_controlcore_agg$ ./run_sauron_api.sh
+```sql
+SELECT SUM(precipitation_total) as total_rainfall
+FROM openweather_historical.fincaste_daily
+WHERE date BETWEEN '2020-06-01' AND '2020-06-30';
+```
+
+So, our best case has stalled at bad reference to schema and a mistake in the table name. 
 
 
 ## Long Term Goals
