@@ -10,6 +10,7 @@ def test_build_sql_prompt_includes_example_and_schema():
     assert '```json' in prompt
     assert schema in prompt
     assert '```sql' in prompt
-    assert 'SELECT *' in prompt
+    assert 'SELECT * FROM table LIMIT 5;' in prompt
     assert 'User question:' in prompt
     assert 'show data' in prompt
+    assert 'without prefixing' in prompt

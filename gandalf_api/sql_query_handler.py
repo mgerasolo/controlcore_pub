@@ -31,13 +31,15 @@ def build_sql_prompt(question: str, schema: str) -> str:
     demonstrate the expected table reference format.
     """
 
-    example = "SELECT * FROM database.table LIMIT 5;"
+    example = "SELECT * FROM table LIMIT 5;"
     formatted_schema = f"```json\n{schema}\n```"
 
     return (
         "You are an AI assistant that generates SQL queries for weather and "
         "environmental databases.\n\n"
         f"Schema:\n{formatted_schema}\n\n"
+        "Each listed database is separate. Use table names directly without "
+        "prefixing them with the database name.\n\n"
         "Example query using the schema above:\n"
         f"```sql\n{example}\n```\n\n"
         "Use **only** the table names exactly as they appear in the schema. Do "

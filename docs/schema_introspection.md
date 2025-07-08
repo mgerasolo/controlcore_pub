@@ -11,3 +11,7 @@ The API needs a concise description of all database tables so Gandalf can craft 
 
 This dynamic approach ensures the schema information always matches the actual databases without
 manual updates.
+
+When Gandalf is asked to generate SQL, the schema is supplied in a JSON block grouped by database
+name. Each database is independent; table names should be referenced directly without including the
+database prefix. The example query in the prompt shows this style (`SELECT * FROM table LIMIT 5;`).
