@@ -74,3 +74,13 @@ def test_sql_overrides_question(monkeypatch):
     # question mentions historical but SQL uses forecast schema
     args = run_chat(monkeypatch, sql, question='show me historical data')
     assert args == ('openweather_forecast', 'OPENFORE_USER', 'OPENFORE_PW')
+
+
+def test_strip_keeps_valid_table():
+    sql = 'SELECT * FROM openweather_historical.fincastle_daily'
+    assert main.strip_fake_schemas(sql) == sql
+
+
+def test_strip_removes_invalid_schema():
+    sql = 'SELECT * FROM openweather_forecast.controllers'
+    assert main.strip_fake_schemas(sql) == 'SELECT * FROM controllers'

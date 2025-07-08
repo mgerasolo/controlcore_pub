@@ -4,6 +4,9 @@ import os
 import psycopg2
 import httpx
 import re
+import sqlparse
+from sqlparse.sql import Identifier, IdentifierList
+from sqlparse.tokens import Keyword, Whitespace
 
 from shared import load_environment, connect_using_env
 from sauron_api.sql_utils import run_sql
@@ -19,9 +22,51 @@ GANDALF_ANALYZE_URL = os.getenv("GANDALF_ANALYZE_URL", "http://localhost:9001/an
 class ChatRequest(BaseModel):
     question: str
 
+# Valid tables for each known schema
+DB_TABLES = {
+    "openweather_historical": ["fincastle_daily"],
+    "openweather_forecast": ["forecast_data"],
+    "controlcore": ["controllers", "controller_health"],
+}
+
+def _extract_table_identifiers(stmt):
+    tables = []
+    tokens = list(stmt.tokens)
+    i = 0
+    while i < len(tokens):
+        token = tokens[i]
+        if token.is_group:
+            tables.extend(_extract_table_identifiers(token))
+        if token.ttype is Keyword and token.value.upper() in ("FROM", "JOIN", "UPDATE", "INTO"):
+            j = i + 1
+            while j < len(tokens) and tokens[j].ttype is Whitespace:
+                j += 1
+            if j < len(tokens):
+                next_tok = tokens[j]
+                if isinstance(next_tok, IdentifierList):
+                    for ident in next_tok.get_identifiers():
+                        tables.append(ident)
+                elif isinstance(next_tok, Identifier):
+                    tables.append(next_tok)
+        i += 1
+    return tables
+
 def strip_fake_schemas(sql: str) -> str:
-    """Removes hallucinated schema prefixes like openweather_forecast.*"""
-    return re.sub(r"\b(openweather_forecast|openweather_historical|controlcore)\.", "", sql)
+    """Remove schema prefixes for tables that don't exist in that schema."""
+    parsed = sqlparse.parse(sql)
+    if not parsed:
+        return sql
+    stmt = parsed[0]
+    tables = _extract_table_identifiers(stmt)
+    replacements = []
+    for ident in tables:
+        schema = ident.get_parent_name()
+        table = ident.get_real_name()
+        if schema and table and table not in DB_TABLES.get(schema, []):
+            replacements.append((f"{schema}.{table}", table))
+    for old, new in replacements:
+        sql = sql.replace(old, new)
+    return sql
 
 def guess_db(question: str) -> str:
     q = question.lower()
