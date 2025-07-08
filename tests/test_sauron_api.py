@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 
 import sauron_api.main as main
 
-
 class DummyResp:
     def __init__(self, data):
         self._data = data
@@ -14,51 +13,53 @@ class DummyResp:
     def json(self):
         return self._data
 
-
-async def dummy_post(url, json):
-    if url.endswith('/generate-sql'):
-        return DummyResp({'sql': 'SELECT 1'})
-    elif url.endswith('/analyze'):
-        return DummyResp({'answer': 'hello', 'display': {'type': 'text'}})
-    raise AssertionError('unexpected url')
-
-
 class DummyClient:
+    def __init__(self, sql):
+        self.sql = sql
     async def __aenter__(self):
         return self
     async def __aexit__(self, exc_type, exc, tb):
         pass
     async def post(self, url, json):
-        return await dummy_post(url, json)
-
-
-class DummyCursor:
-    def execute(self, sql):
-        self.sql = sql
-    def fetchall(self):
-        return [(1,)]
-    def __enter__(self):
-        return self
-    def __exit__(self, exc_type, exc, tb):
-        pass
-
+        if url.endswith('/generate-sql'):
+            return DummyResp({'sql': self.sql})
+        if url.endswith('/analyze'):
+            return DummyResp({'answer': 'hello', 'display': {'type': 'text'}})
+        raise AssertionError('unexpected url')
 
 class DummyConn:
-    def cursor(self):
-        return DummyCursor()
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc, tb):
         pass
 
-
-def test_chat_endpoint(monkeypatch):
+def run_chat(monkeypatch, sql):
+    captured = {}
     monkeypatch.setattr(main, 'collect_table_schema', lambda q: 'schema')
-    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient())
-    monkeypatch.setattr(main, 'connect_using_env', lambda *a, **k: DummyConn())
+    monkeypatch.setattr(main.httpx, 'AsyncClient', lambda: DummyClient(sql))
+    def fake_connect(db, user_var, pw_var):
+        captured['args'] = (db, user_var, pw_var)
+        return DummyConn()
+    monkeypatch.setattr(main, 'connect_using_env', fake_connect)
+    monkeypatch.setattr(main, 'run_sql', lambda conn, q: captured.setdefault('query', q) or [])
 
     client = TestClient(main.app)
-    resp = client.post('/chat', json={'question': 'What is up?'})
+    resp = client.post('/chat', json={'question': 'what?'})
     assert resp.status_code == 200
-    data = resp.json()
-    assert data['answer'] == 'hello'
+    assert resp.json()['answer'] == 'hello'
+    assert captured['query'] == sql
+    return captured['args']
+
+def test_chat_controlcore(monkeypatch):
+    args = run_chat(monkeypatch, 'SELECT * FROM controllers')
+    assert args == ('controlcore', 'CONTROLCORE_USER', 'CONTROLCORE_PW')
+
+def test_chat_openweather_historical(monkeypatch):
+    sql = 'SELECT * FROM openweather_historical.fincastle_daily'
+    args = run_chat(monkeypatch, sql)
+    assert args == ('openweather_historical', 'OPENHIST_USER', 'OPENHIST_PW')
+
+def test_chat_openweather_forecast(monkeypatch):
+    sql = 'SELECT * FROM openweather_forecast.forecast_data'
+    args = run_chat(monkeypatch, sql)
+    assert args == ('openweather_forecast', 'OPENFORE_USER', 'OPENFORE_PW')

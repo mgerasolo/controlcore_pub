@@ -31,9 +31,22 @@ async def chat(req: ChatRequest):
     if not sql:
         raise HTTPException(status_code=500, detail="Gandalf did not return SQL")
 
-    # Step 2: Execute SQL against the local DB
+    # Step 2: Determine which DB to query and execute
+    db = "controlcore"
+    user_var = "CONTROLCORE_USER"
+    pw_var = "CONTROLCORE_PW"
+    lowered_sql = sql.lower()
+    if "openweather_historical." in lowered_sql:
+        db = "openweather_historical"
+        user_var = "OPENHIST_USER"
+        pw_var = "OPENHIST_PW"
+    elif "openweather_forecast." in lowered_sql:
+        db = "openweather_forecast"
+        user_var = "OPENFORE_USER"
+        pw_var = "OPENFORE_PW"
+
     try:
-        with connect_using_env("controlcore", "PG_USER", "PG_PASSWORD") as conn:
+        with connect_using_env(db, user_var, pw_var) as conn:
             print(sql)
             rows = run_sql(conn, sql)
     except Exception as e:
