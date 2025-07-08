@@ -138,6 +138,7 @@ CREATE TABLE schema_embeddings (
   entry_type text  -- alias | column | example | description
 );
 
+  - The SQL for this table is in `database_schemas/raw_dumps/schema_embeddings.sql` if you need to apply it manually.
 
   - /database_schemas/vector_embeddings/ stores the json to be embedded
   - Run `python scripts/load_schema_vectors.py` after editing these files to
