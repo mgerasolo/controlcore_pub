@@ -168,51 +168,35 @@ def ensure_directories_and_files():
 
 
 def fill_credentials():
-    """
-    Fetch and populate credential variables for databases and API access.
-
-    Raises:
-        Exception: If credential fetching fails.
-    """
+    """Populate database connection strings from environment variables."""
 
     global LOGGING_DB_CONNECTION, WEATHER_DB_CONNECTION, WEATHER_FORECAST_DB_CONNECTION, API_KEY
 
-    fetcher = CredentialFetch()
+    LOGGING_DB_CONNECTION = build_kv_dsn(
+        os.getenv("CONTROLCORE_USER"),
+        os.getenv("CONTROLCORE_PW"),
+        "api_logging",
+        host=os.getenv("PG_HOST", "localhost"),
+        port=os.getenv("PG_PORT", 5432),
+    )
 
-    try:
-        # Fetch and set logging database credentials
-        logging_credentials = fetcher.api_credential_fetch('LOGGING_DB_CONNECTION')
-        LOGGING_DB_CONNECTION = build_kv_dsn(
-            logging_credentials['username'],
-            logging_credentials['password'],
-            logging_credentials['dbname'],
-            host='localhost'
-        )
+    WEATHER_DB_CONNECTION = build_kv_dsn(
+        os.getenv("OPENHIST_USER"),
+        os.getenv("OPENHIST_PW"),
+        "openweather_historical",
+        host=os.getenv("PG_HOST", "localhost"),
+        port=os.getenv("PG_PORT", 5432),
+    )
 
-        # Fetch and set weather database credentials
-        weather_credentials = fetcher.api_credential_fetch('WEATHER_DB_CONNECTION')
-        WEATHER_DB_CONNECTION = build_kv_dsn(
-            weather_credentials['username'],
-            weather_credentials['password'],
-            weather_credentials['dbname'],
-            host='localhost'
-        )
+    WEATHER_FORECAST_DB_CONNECTION = build_kv_dsn(
+        os.getenv("OPENFORE_USER"),
+        os.getenv("OPENFORE_PW"),
+        "openweather_forecast",
+        host=os.getenv("PG_HOST", "localhost"),
+        port=os.getenv("PG_PORT", 5432),
+    )
 
-        # Fetch and set forecast database credentials
-        forecast_credentials = fetcher.api_credential_fetch('WEATHER_FORECAST_DB_CONNECTION')
-        WEATHER_FORECAST_DB_CONNECTION = build_kv_dsn(
-            forecast_credentials['username'],
-            forecast_credentials['password'],
-            forecast_credentials['dbname'],
-            host='localhost'
-        )
-
-        # Fetch and set OpenWeather API Key
-        api_credentials = fetcher.api_credential_fetch('ow_api_token_excessus1')
-        API_KEY = api_credentials['password']
-
-    except Exception as e:
-        print(f"Error: {e}")
+    API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
 
 # Ensure directories and files when the script is imported
