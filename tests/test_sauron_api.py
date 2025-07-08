@@ -90,12 +90,24 @@ def test_chat_rephrase(monkeypatch):
     run_chat(monkeypatch, 'SELECT 1', question='orig', rephrased='cleaned')
 
 
-def test_strip_keeps_valid_table():
+def test_strip_keeps_valid_table(monkeypatch):
+    monkeypatch.setattr(main, 'build_db_tables', lambda: {
+        'openweather_historical': ['fincastle_daily'],
+        'openweather_forecast': ['forecast_data'],
+        'controlcore': ['controllers', 'controller_health'],
+    })
+    main.DB_TABLES = main.build_db_tables()
     sql = 'SELECT * FROM openweather_historical.fincastle_daily'
     assert main.strip_fake_schemas(sql) == sql
 
 
-def test_strip_removes_invalid_schema():
+def test_strip_removes_invalid_schema(monkeypatch):
+    monkeypatch.setattr(main, 'build_db_tables', lambda: {
+        'openweather_historical': ['fincastle_daily'],
+        'openweather_forecast': ['forecast_data'],
+        'controlcore': ['controllers', 'controller_health'],
+    })
+    main.DB_TABLES = main.build_db_tables()
     sql = 'SELECT * FROM openweather_forecast.controllers'
     assert main.strip_fake_schemas(sql) == 'SELECT * FROM controllers'
 

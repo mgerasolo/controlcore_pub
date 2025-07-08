@@ -13,6 +13,7 @@ from sqlparse.tokens import Keyword, Whitespace
 from shared import load_environment, connect_using_env
 from sauron_api.sql_utils import run_sql
 from shared.table_schema import collect_table_schema
+from shared.schema_introspect import list_public_tables
 
 load_environment()
 
@@ -25,12 +26,24 @@ GANDALF_REPHRASE_URL = os.getenv("GANDALF_REPHRASE_URL", "http://localhost:9001/
 class ChatRequest(BaseModel):
     question: str
 
+# Databases to introspect for table names
+DB_NAMES = [
+    "openweather_historical",
+    "openweather_forecast",
+    "controlcore",
+]
+
+
+def build_db_tables() -> dict:
+    """Return mapping of database names to their public tables."""
+    tables = {}
+    for name in DB_NAMES:
+        tables[name] = list_public_tables(name)
+    return tables
+
+
 # Valid tables for each known schema
-DB_TABLES = {
-    "openweather_historical": ["fincastle_daily"],
-    "openweather_forecast": ["forecast_data"],
-    "controlcore": ["controllers", "controller_health"],
-}
+DB_TABLES = build_db_tables()
 
 def _extract_table_identifiers(stmt):
     tables = []
