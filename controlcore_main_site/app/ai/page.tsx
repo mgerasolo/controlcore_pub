@@ -220,8 +220,8 @@ export default function AIPage() {
                       Ask questions about irrigation, weather, scheduling, or system optimization
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="flex-1 flex flex-col">
-                    <ScrollArea className="flex-1 pr-4">
+                  <CardContent className="flex-1 flex flex-col min-h-0">
+                    <ScrollArea className="h-full flex-1 pr-4">
                       <div className="space-y-4">
                         {messages.map((message) => (
                           <div
