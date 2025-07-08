@@ -5,6 +5,8 @@ import psycopg2
 import httpx
 import re
 import sqlparse
+import json
+import datetime
 from sqlparse.sql import Identifier, IdentifierList
 from sqlparse.tokens import Keyword, Whitespace
 
@@ -86,6 +88,24 @@ def db_from_sql(sql: str) -> str | None:
         return "openweather_historical"
     return None
 
+def safe_serialize(obj):
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        return obj.isoformat()
+    return str(obj)
+
+def clean_sql_block(query: str) -> str:
+    # Remove markdown formatting if present
+    if query.strip().startswith("```sql"):
+        query = query.strip().strip("```sql").strip("```").strip()
+
+    # Use sqlparse to extract only the first statement (ignore commentary or explanations)
+    parsed = sqlparse.parse(query)
+    if not parsed:
+        return query
+
+    stmt = parsed[0].value.strip()
+    return stmt
+
 # Map database names to the environment variables holding credentials
 DB_USER_VARS = {
     "controlcore": ("CONTROLCORE_USER", "CONTROLCORE_PW"),
@@ -114,6 +134,8 @@ async def chat(req: ChatRequest):
 
     detected = db_from_sql(sql)
     sql = strip_fake_schemas(sql)
+    sql = clean_sql_block(sql)
+
     print("Stripped SQL:", sql)
 
     # Step 2: Pick database connection
@@ -127,13 +149,18 @@ async def chat(req: ChatRequest):
         raise HTTPException(status_code=500, detail=f"SQL execution failed: {e}")
 
     # Step 3: Ask Gandalf to analyze
+    safe_rows = [
+        {k: safe_serialize(v) for k, v in row.items()} for row in result
+    ]
+
     async with httpx.AsyncClient() as client:
         final_resp = await client.post(GANDALF_ANALYZE_URL, json={
             "question": req.question,
             "sql": sql,
-            "rows": result
+            "rows": safe_rows
         })
         final_resp.raise_for_status()
         data = final_resp.json()
 
     return data
+
