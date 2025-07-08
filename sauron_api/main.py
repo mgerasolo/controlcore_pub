@@ -192,9 +192,11 @@ async def chat(req: ChatRequest):
 
     logging.info("Original SQL: %s", sql)
 
+    sql = clean_sql_block(sql)
+
     detected = db_from_sql(sql)
     sql = strip_fake_schemas(sql)
-    sql = clean_sql_block(sql)
+    #sql = clean_sql_block(sql)
     validate_tables(sql)
 
     try:
