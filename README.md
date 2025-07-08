@@ -140,9 +140,15 @@ CREATE TABLE schema_embeddings (
 
   - The SQL for this table is in `database_schemas/raw_dumps/schema_embeddings.sql` if you need to apply it manually.
 
-  - /database_schemas/vector_embeddings/ stores the json to be embedded
-  - Run `python scripts/load_schema_vectors.py` after editing these files to
-    refresh the `schema_embeddings` table
+  - Edit the JSON definitions under `database_schemas/vector_embeddings/`.
+  - Run `python scripts/load_schema_vectors.py` afterwards to refresh the
+    `schema_embeddings` table.
+    - The script reads `CONTROLCORE_USER`, `CONTROLCORE_PW`, `PG_HOST` and
+      `PG_PORT` from your environment to connect to Postgres.
+    - The `schema_embeddings` table requires the `pgvector` extension.
+  - Once loaded, the `/chat` endpoint retrieves the best matching snippets via
+    vector similarity and sends them to Gandalf along with the introspected
+    schema.
 
   - adjust instructions, rails, guides, etc accordingly
 
