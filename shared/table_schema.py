@@ -1,35 +1,26 @@
+from .schema_introspect import fetch_schema
+
+
 def collect_table_schema(_: str) -> str:
-    return """
-# Available Databases and Tables
+    db_tables = {
+        "openweather_historical": ["fincastle_daily"],
+        "openweather_forecast": ["forecast_data"],
+        "controlcore": ["controllers", "controller_health"],
+    }
 
-## openweather_historical
-- fincastle_daily(
-    date INT,
-    precipitation_total REAL,
-    temperature_max REAL,
-    temperature_min REAL
-)
+    lines = ["# Available Databases and Tables", ""]
+    for dbname, tables in db_tables.items():
+        schema = fetch_schema(dbname, tables)
+        lines.append(f"## {dbname}")
+        for table in tables:
+            cols = schema.get(table, [])
+            if not cols:
+                continue
+            lines.append(f"- {table}(")
+            for i, col in enumerate(cols):
+                comma = "," if i < len(cols) - 1 else ""
+                lines.append(f"    {col['name']} {col['type'].upper()}{comma}")
+            lines.append(")")
+        lines.append("")
 
-## openweather_forecast
-- forecast_data(
-    date INT,
-    lat REAL,
-    lon REAL,
-    temperature REAL,
-    precipitation_mm REAL,
-    humidity INT
-)
-
-## controlcore
-- controllers(
-    controller_id TEXT,
-    station_id TEXT,
-    last_seen TIMESTAMP
-)
-- controller_health(
-    controller_id TEXT,
-    last_reported TIMESTAMP,
-    issue TEXT,
-    severity TEXT
-)
-"""
+    return "\n".join(lines).rstrip()
