@@ -84,6 +84,13 @@ Start the API with:
 ./run_sauron_api.sh
 ```
 
+Start the Gandalf API with:
+
+```bash
+./run_gandalf_api.sh
+```
+It listens on port 9001.
+
 The server listens on port 8000 and sends requests to Gandalf using
 `GANDALF_REPHRASE_URL`, `GANDALF_SQL_URL` and `GANDALF_ANALYZE_URL`. Gandalf
 then talks to Ollama via `OLLAMA_URL` using the models defined by
