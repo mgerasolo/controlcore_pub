@@ -63,3 +63,14 @@ def test_chat_openweather_forecast(monkeypatch):
     sql = 'SELECT * FROM openweather_forecast.forecast_data'
     args = run_chat(monkeypatch, sql, question='weather forecast for tomorrow')
     assert args == ('openweather_forecast', 'OPENFORE_USER', 'OPENFORE_PW')
+
+def test_sql_decides_db(monkeypatch):
+    sql = 'SELECT * FROM openweather_historical.fincastle_daily'
+    args = run_chat(monkeypatch, sql)
+    assert args == ('openweather_historical', 'OPENHIST_USER', 'OPENHIST_PW')
+
+def test_sql_overrides_question(monkeypatch):
+    sql = 'SELECT * FROM openweather_forecast.forecast_data'
+    # question mentions historical but SQL uses forecast schema
+    args = run_chat(monkeypatch, sql, question='show me historical data')
+    assert args == ('openweather_forecast', 'OPENFORE_USER', 'OPENFORE_PW')
