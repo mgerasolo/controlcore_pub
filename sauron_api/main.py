@@ -18,6 +18,7 @@ app = FastAPI()
 
 GANDALF_SQL_URL = os.getenv("GANDALF_SQL_URL", "http://localhost:9001/generate-sql")
 GANDALF_ANALYZE_URL = os.getenv("GANDALF_ANALYZE_URL", "http://localhost:9001/analyze")
+GANDALF_REPHRASE_URL = os.getenv("GANDALF_REPHRASE_URL", "http://localhost:9001/rephrase")
 
 class ChatRequest(BaseModel):
     question: str
@@ -96,9 +97,13 @@ DB_USER_VARS = {
 async def chat(req: ChatRequest):
     schema = collect_table_schema(req.question)
 
-    # Step 1: Ask Gandalf to generate SQL
+    # Step 1: Rephrase and ask Gandalf to generate SQL
     async with httpx.AsyncClient() as client:
-        gen_resp = await client.post(GANDALF_SQL_URL, json={"question": req.question, "schema": schema})
+        rep_resp = await client.post(GANDALF_REPHRASE_URL, json={"text": req.question})
+        rep_resp.raise_for_status()
+        clean_q = rep_resp.json().get("text", req.question)
+
+        gen_resp = await client.post(GANDALF_SQL_URL, json={"question": clean_q, "schema": schema})
         gen_resp.raise_for_status()
         sql = gen_resp.json().get("sql")
 

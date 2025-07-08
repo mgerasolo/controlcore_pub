@@ -20,10 +20,10 @@ Set `OPENWEATHER_ARCHIVE_CUTOFF_DAYS` to control how old weather data must be be
 being moved to long‑term tables. `OPENWEATHER_ARCHIVE_LOCATIONS` lists the
 friendly names that have `<name>_daily` and `<name>_hourly` tables used for archival.
 Set `SAURON_API_URL` to the `/chat` route exposed by the FastAPI server.
-Provide `GANDALF_SQL_URL` and `GANDALF_ANALYZE_URL` so the API can call Gandalf
-for SQL generation and analysis. Gandalf in turn contacts Ollama using
-`OLLAMA_URL` with the models specified by `OLLAMA_SQL_MODEL` and
-`OLLAMA_SUMMARY_MODEL`.
+Provide `GANDALF_SQL_URL`, `GANDALF_ANALYZE_URL` and `GANDALF_REPHRASE_URL` so
+the API can call Gandalf for SQL generation, analysis and question cleanup.
+Gandalf in turn contacts Ollama using `OLLAMA_URL` with the models specified by
+`OLLAMA_SQL_MODEL` and `OLLAMA_SUMMARY_MODEL`.
 
 ## Planned Structure
 
@@ -84,10 +84,10 @@ Start the API with:
 ```
 
 The server listens on port 8000 and sends requests to Gandalf using
-`GANDALF_SQL_URL` and `GANDALF_ANALYZE_URL`. Gandalf then talks to Ollama via
-`OLLAMA_URL` using the models defined by `OLLAMA_SQL_MODEL` and
-`OLLAMA_SUMMARY_MODEL`. Configure your front end to send chat requests to
-`SAURON_API_URL`.
+`GANDALF_REPHRASE_URL`, `GANDALF_SQL_URL` and `GANDALF_ANALYZE_URL`. Gandalf
+then talks to Ollama via `OLLAMA_URL` using the models defined by
+`OLLAMA_SQL_MODEL` and `OLLAMA_SUMMARY_MODEL`. Configure your front end to send
+chat requests to `SAURON_API_URL`.
 
 ## Short Term Goals
 

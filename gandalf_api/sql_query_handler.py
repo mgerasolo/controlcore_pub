@@ -19,6 +19,9 @@ class AnalyzeRequest(BaseModel):
     sql: str
     rows: list[dict]
 
+class RephraseRequest(BaseModel):
+    text: str
+
 def build_sql_prompt(question: str, schema: str) -> str:
     return f"""You are an AI assistant that generates SQL queries for weather and environmental databases.
 
@@ -62,6 +65,12 @@ async def call_ollama(prompt: str, model: str) -> str:
         )
         response.raise_for_status()
         return response.json().get("response", "").strip()
+
+@app.post("/rephrase")
+async def rephrase(req: RephraseRequest):
+    prompt = f"Clean and simplify this question for a coding model:\n{req.text}"
+    response = await call_ollama(prompt, model="llama3")
+    return {"text": response}
 
 @app.post("/generate-sql")
 async def generate_sql(req: SQLRequest):
