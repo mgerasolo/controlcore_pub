@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from typing import List, Dict
+import psycopg2
+from fastapi import HTTPException
+import logging
 
 
 def get_table_schema(conn, tables: List[str]) -> Dict[str, List[dict]]:
@@ -53,11 +56,18 @@ def run_sql(conn, query: str) -> List[dict]:
     if ";" in stripped[:-1]:
         raise ValueError("multiple statements detected")
 
-    with conn.cursor() as cur:
-        cur.execute(query)
-        description = getattr(cur, "description", None) or []
-        colnames = [desc[0] for desc in description]
-        rows = cur.fetchall()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(query)
+            description = getattr(cur, "description", None) or []
+            colnames = [desc[0] for desc in description]
+            rows = cur.fetchall()
+    except psycopg2.Error as e:
+        logging.error("SQL execution failed: %s", query)
+        logging.exception(e)
+        if getattr(e, "pgcode", None) in ("42P01", "42703"):
+            raise HTTPException(status_code=400, detail=e.pgerror or str(e))
+        raise
 
     return [dict(zip(colnames, row)) for row in rows]
 

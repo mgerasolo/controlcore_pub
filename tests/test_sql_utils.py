@@ -2,6 +2,8 @@ import sys
 sys.path.append('.')
 
 from sauron_api.sql_utils import get_table_schema, run_sql
+from fastapi import HTTPException
+import psycopg2
 
 
 class DummyCursor:
@@ -92,4 +94,35 @@ def test_run_sql_rejects_non_select():
     else:
         assert False, 'ValueError not raised'
     assert not cursor.executed
+
+
+class ErrorCursor(DummyCursor):
+    def execute(self, query, params=None):
+        class Dummy(psycopg2.Error):
+            def __init__(self, code, msg):
+                super().__init__(msg)
+                self._code = code
+                self._err = msg
+
+            @property
+            def pgcode(self):
+                return self._code
+
+            @property
+            def pgerror(self):
+                return self._err
+
+        raise Dummy("42P01", "relation 'missing' does not exist")
+
+
+def test_run_sql_missing_table_returns_400():
+    cursor = ErrorCursor()
+    conn = DummyConn(cursor)
+    try:
+        run_sql(conn, "SELECT * FROM missing")
+    except HTTPException as e:
+        assert e.status_code == 400
+        assert "does not exist" in e.detail
+    else:
+        assert False, "HTTPException not raised"
 
