@@ -1,3 +1,9 @@
 pytest
 fastapi[test]
 httpx
+psycopg2-binary
+pandas
+paho-mqtt
+cryptography
+python-dotenv
+sqlparse
