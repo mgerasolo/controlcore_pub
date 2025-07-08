@@ -1,4 +1,5 @@
 import psycopg2
+import logging
 from typing import List, Dict
 
 from .env_utils import connect_using_env
@@ -35,9 +36,11 @@ def fetch_schema(dbname: str, tables: List[str]) -> Dict[str, List[dict]]:
                 "ORDER BY table_name, ordinal_position"
             )
             with conn.cursor() as cur:
+                logging.debug("Fetching schema for %s tables: %s", dbname, tables)
                 cur.execute(sql, (tables,))
                 rows = cur.fetchall()
-    except Exception:
+    except Exception as e:
+        logging.warning("Schema fetch failed for %s: %s", dbname, e)
         return schema
 
     for table_name, column_name, data_type in rows:
@@ -58,7 +61,13 @@ def list_public_tables(dbname: str) -> List[str]:
                     "ORDER BY table_name"
                 )
                 rows = cur.fetchall()
-    except Exception:
+    except Exception as e:
+        logging.warning("Failed listing tables for %s: %s", dbname, e)
         return []
 
-    return [r[0] for r in rows]
+    tables = [r[0] for r in rows]
+    if not tables:
+        logging.warning("No tables discovered in %s", dbname)
+    else:
+        logging.debug("Tables in %s: %s", dbname, tables)
+    return tables

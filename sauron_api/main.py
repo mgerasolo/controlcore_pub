@@ -7,6 +7,7 @@ import re
 import sqlparse
 import json
 import datetime
+import logging
 from sqlparse.sql import Identifier, IdentifierList
 from sqlparse.tokens import Keyword, Whitespace
 
@@ -38,7 +39,9 @@ def build_db_tables() -> dict:
     """Return mapping of database names to their public tables."""
     tables = {}
     for name in DB_NAMES:
-        tables[name] = list_public_tables(name)
+        tbls = list_public_tables(name)
+        logging.debug("Discovered tables for %s: %s", name, tbls)
+        tables[name] = tbls
     return tables
 
 
@@ -187,7 +190,7 @@ async def chat(req: ChatRequest):
     if not sql:
         raise HTTPException(status_code=500, detail="Gandalf did not return SQL")
 
-    print("Original SQL:", sql)
+    logging.info("Original SQL: %s", sql)
 
     detected = db_from_sql(sql)
     sql = strip_fake_schemas(sql)
@@ -199,7 +202,7 @@ async def chat(req: ChatRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    print("Stripped SQL:", sql)
+    logging.info("Stripped SQL: %s", sql)
 
     # Step 2: Pick database connection
     dbname = detected or guess_db(req.question)

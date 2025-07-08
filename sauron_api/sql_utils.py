@@ -58,6 +58,7 @@ def run_sql(conn, query: str) -> List[dict]:
 
     try:
         with conn.cursor() as cur:
+            logging.info("Executing query: %s", query)
             cur.execute(query)
             description = getattr(cur, "description", None) or []
             colnames = [desc[0] for desc in description]

@@ -3,6 +3,7 @@ sys.path.append('.')
 
 import shared.schema_introspect as si
 from shared.table_schema import collect_table_schema
+import json
 
 
 class DummyCursor:
@@ -80,10 +81,11 @@ def test_collect_table_schema_aggregates(monkeypatch):
     monkeypatch.setattr('shared.table_schema.list_public_tables', fake_list)
 
     md = collect_table_schema('ignored')
+    schema = json.loads(md)
 
     assert ('controlcore', ('controllers', 'controller_health')) in fetch_calls
     assert ('openweather_historical', ('fincastle_daily',)) in fetch_calls
     assert ('openweather_forecast', ('forecast_data',)) in fetch_calls
-    assert '# Available Databases and Tables' in md
-    assert '## controlcore' in md
-    assert '- controllers(' in md
+    assert 'controlcore' in schema
+    assert 'controllers' in schema['controlcore']
+    assert schema['controlcore']['controllers'][0] == 'id INT'
