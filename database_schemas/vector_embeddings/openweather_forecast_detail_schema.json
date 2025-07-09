@@ -7,7 +7,7 @@
       "description": "Highly denormalized view of forecast data including current conditions and up to 7 days of hourly and daily projections.",
       "columns": {
         "timestamp": "Datetime the forecast was pulled.",
-        "current_temp": "Current temperature (°F).",
+        "current_temp": "Current temperature (\u00b0F).",
         "current_weather_description": "Weather condition, e.g., 'light rain'.",
         "hour_0_temp": "Forecasted temperature at current hour.",
         "hour_3_temp": "Forecasted temperature 3 hours from now.",
@@ -26,12 +26,13 @@
         "7-day outlook",
         "hourly forecast"
       ],
-      "example_queries": [
+      "example_prompts": [
         "Will it rain tomorrow?",
         "Give me the temperature forecast for the next 6 hours.",
         "How likely is rain 5 days from now?",
         "What's the weather summary for the weekend?"
-      ]
+      ],
+      "example_sql_queries": []
     }
   ]
 }

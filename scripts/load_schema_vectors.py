@@ -32,9 +32,15 @@ def build_rows(path: Path, model: SentenceTransformer) -> list[tuple]:
             vec = model.encode(alias).tolist()
             rows.append((tname, None, alias, vec, path.name, "alias"))
 
-        for example in table.get("example_queries", []) or []:
-            vec = model.encode(example).tolist()
-            rows.append((tname, None, example, vec, path.name, "example"))
+        prompts = table.get("example_prompts")
+        legacy = table.get("example_queries") if prompts is None else None
+        for prompt in prompts or legacy or []:
+            vec = model.encode(prompt).tolist()
+            rows.append((tname, None, prompt, vec, path.name, "prompt"))
+
+        for sql in table.get("example_sql_queries", []) or []:
+            vec = model.encode(sql).tolist()
+            rows.append((tname, None, sql, vec, path.name, "sql"))
     return rows
 
 

@@ -5,5 +5,5 @@ CREATE TABLE schema_embeddings (
   content text,
   embedding vector(768),
   source_file text,
-  entry_type text  -- alias | column | example | description
+  entry_type text  -- alias | column | prompt | sql | description
 );
