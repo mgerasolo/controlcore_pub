@@ -38,3 +38,6 @@ controlcore_main_site/.next/
 app/api/auth/session/route.ts_bak
 
 controlcore_ai/logs/*.log
+
+sauron_api/logs/*
+!sauron_api/logs/.gitkeep
