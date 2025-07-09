@@ -39,7 +39,8 @@ def test_main_inserts_rows(monkeypatch, tmp_path):
                 "description": "User table",
                 "columns": {"id": "identifier"},
                 "aliases": ["people"],
-                "example_queries": ["count users"]
+                "example_prompts": ["count users"],
+                "example_sql_queries": ["SELECT count(*) FROM users"]
             }
         ]
     }
@@ -103,6 +104,67 @@ def test_main_inserts_rows(monkeypatch, tmp_path):
         ("users", None, "User table", [1], "sample.json", "description"),
         ("users", "id", "identifier", [2], "sample.json", "column"),
         ("users", None, "people", [3], "sample.json", "alias"),
-        ("users", None, "count users", [4], "sample.json", "example"),
+        ("users", None, "count users", [4], "sample.json", "prompt"),
+        ("users", None, "SELECT count(*) FROM users", [5], "sample.json", "sql"),
     ]
-    assert model.calls == ["User table", "identifier", "people", "count users"]
+    assert model.calls == [
+        "User table",
+        "identifier",
+        "people",
+        "count users",
+        "SELECT count(*) FROM users",
+    ]
+
+
+def test_legacy_example_queries(monkeypatch, tmp_path):
+    data = {
+        "tables": [
+            {"table": "t", "example_queries": ["legacy"]}
+        ]
+    }
+    json_file = tmp_path / "legacy.json"
+    json_file.write_text(json.dumps(data))
+
+    class DummyModel:
+        def encode(self, text):
+            class Vec(list):
+                def tolist(self):
+                    return list(self)
+
+            return Vec([42])
+
+    monkeypatch.setattr(lsv, "SentenceTransformer", lambda name: DummyModel())
+    monkeypatch.setattr(lsv.Path, "glob", lambda self, pattern: [json_file])
+    monkeypatch.setattr(lsv, "load_environment", lambda: None)
+    monkeypatch.setattr(lsv, "register_vector", lambda conn: None)
+
+    class DummyCursor:
+        def __enter__(self):
+            return self
+        def __exit__(self, exc_type, exc, tb):
+            pass
+
+    class DummyConn:
+        def cursor(self):
+            return DummyCursor()
+        def __enter__(self):
+            return self
+        def __exit__(self, exc_type, exc, tb):
+            pass
+
+    conn = DummyConn()
+    captured = {}
+
+    def fake_connect(db, user_var, pw_var):
+        captured['args'] = (db, user_var, pw_var)
+        return conn
+
+    def fake_execute_values(cur, sql, rows):
+        captured['rows'] = rows
+
+    monkeypatch.setattr(lsv, "connect_using_env", fake_connect)
+    monkeypatch.setattr(lsv, "execute_values", fake_execute_values)
+
+    lsv.main()
+
+    assert captured['rows'] == [("t", None, "legacy", [42], "legacy.json", "prompt")]

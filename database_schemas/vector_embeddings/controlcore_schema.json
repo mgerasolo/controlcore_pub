@@ -11,7 +11,7 @@
         "sensor_id": "Unique identifier for the sensor.",
         "sensor_type": "Type of sensor (e.g., moisture, temp, rain_gauge).",
         "value": "Sensor reading value (float).",
-        "unit": "Unit of the sensor reading, e.g., %, °C.",
+        "unit": "Unit of the sensor reading, e.g., %, \u00b0C.",
         "received_at": "Timestamp when the data was received.",
         "location_id": "Mapped location ID from the locations table."
       },
@@ -22,12 +22,13 @@
         "sensor history",
         "last sensor report"
       ],
-      "example_queries": [
+      "example_prompts": [
         "Show the latest soil moisture value.",
         "What was the last rainfall amount?",
         "Get all temperature readings from the past 6 hours.",
         "What value did the controller see for moisture yesterday?"
-      ]
+      ],
+      "example_sql_queries": []
     },
     {
       "table": "control_log",
@@ -46,12 +47,13 @@
         "irrigation record",
         "pump on/off log"
       ],
-      "example_queries": [
+      "example_prompts": [
         "When was the last watering in zone 2?",
         "What command was issued for the tomatoes yesterday?",
         "Show the last time any valve opened.",
         "How long was the sprinkler on?"
-      ]
+      ],
+      "example_sql_queries": []
     }
   ]
 }

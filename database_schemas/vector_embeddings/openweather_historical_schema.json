@@ -31,17 +31,18 @@
         "fincastle hourly",
         "weather logs"
       ],
-      "example_queries": [
+      "physical_tables": [
+        "hourly_data",
+        "fincastle_hourly",
+        "rome_hourly"
+      ],
+      "example_prompts": [
         "What was the temperature at noon yesterday?",
         "Give me the wind speed at 3 AM on June 26.",
         "Show hourly humidity for the last 48 hours.",
         "When did it last say 'rain' in the description?"
       ],
-      "physical_tables": [
-        "hourly_data",
-        "fincastle_hourly",
-        "rome_hourly"
-      ]
+      "example_sql_queries": []
     },
     {
       "table": "daily_summary_data",
@@ -72,12 +73,13 @@
         "fincastle_daily",
         "rome_daily"
       ],
-      "example_queries": [
+      "example_prompts": [
         "How much did it rain last Thursday?",
         "What was the hottest day last month?",
         "Give me the windiest days this week.",
         "Show all daily weather summaries for June."
-      ]
+      ],
+      "example_sql_queries": []
     }
   ]
 }
