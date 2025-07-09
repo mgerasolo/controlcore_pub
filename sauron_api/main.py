@@ -143,17 +143,38 @@ def safe_serialize(obj):
     return str(obj)
 
 def clean_sql_block(query: str) -> str:
-    # Remove markdown formatting if present
-    if query.strip().startswith("```sql"):
-        query = query.strip().strip("```sql").strip("```").strip()
+    """Return the first SQL statement found in *query*.
 
-    # Use sqlparse to extract only the first statement (ignore commentary or explanations)
-    parsed = sqlparse.parse(query)
-    if not parsed:
-        return query
+    The Gandalf API sometimes wraps the SQL in Markdown fencing or prefixes it
+    with explanatory text. This helper strips those extras and ensures the
+    returned statement begins with ``SELECT`` or ``WITH``.
+    """
 
-    stmt = parsed[0].value.strip()
-    return stmt
+    text = query.strip()
+
+    # Pull out fenced code blocks if present
+    fence_match = re.search(r"```(?:sql)?(.*?)```", text, re.I | re.S)
+    if fence_match:
+        text = fence_match.group(1).strip()
+    else:
+        # Remove opening fence if it's at the start without a closing one
+        if text.startswith("```sql"):
+            text = text[len("```sql"):].strip().strip("`").strip()
+
+    # Find the first occurrence of a SELECT or WITH keyword
+    start_match = re.search(r"(?is)(SELECT|WITH)\b", text)
+    if start_match:
+        text = text[start_match.start():]
+
+    # Use sqlparse to isolate the first statement
+    statements = sqlparse.split(text)
+    for stmt in statements:
+        stmt = stmt.strip()
+        if re.match(r"(?is)^(SELECT|WITH)\b", stmt):
+            return stmt
+
+    # Fallback to the trimmed text if no valid statement was parsed
+    return text.strip()
 
 def validate_tables(sql: str) -> None:
     """Ensure all referenced tables exist in the known schemas."""
