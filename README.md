@@ -101,7 +101,11 @@ chat requests to `SAURON_API_URL`.
 
 General FastAPI activity is written to `sauron_api/logs/app.log`. AI prompts and
 responses are logged to `sauron_api/logs/chat.log` for troubleshooting
-conversations.
+conversations. Each chat entry also notes how many schema hints were retrieved
+and the table names returned by the embedding search, followed by the final SQL
+statement that was executed. Reviewing these lines can help gauge how well the
+embeddings match the user's questions and whether the resulting SQL looks
+reasonable.
 
 ## Short Term Goals
 
