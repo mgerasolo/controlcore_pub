@@ -37,7 +37,7 @@ def build_sql_prompt(question: str, schema: str, context: list[dict] | None = No
     formatted_schema = f"```json\n{schema}\n```"
 
     prompt = (
-        "You are an AI assistant that generates SQL queries for weather and "
+        "You are an AI assistant that generates Postgres SQL queries for weather and "
         "environmental databases. The databases use PostgreSQL syntax.\n\n"
         f"Schema:\n{formatted_schema}\n"
     )
@@ -55,8 +55,8 @@ def build_sql_prompt(question: str, schema: str, context: list[dict] | None = No
         "not guess or invent new table names.\n\n"
         "User question:\n"
         f"{question} postgres\n\n"
-        "Only return a valid SQL query. Do not explain it."
-        " Respond with the SQL statement only—no commentary, no Markdown fences."
+        "Only return a valid Postgres SQL query. Do not explain it."
+        " Respond with the Postgres SQL statement only—no commentary, no Markdown fences."
     )
 
     return prompt
