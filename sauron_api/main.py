@@ -217,7 +217,7 @@ def retrieve_schema_context(question: str, top_n: int = 5) -> list[dict]:
             cur.execute(
                 "SELECT table_name, column_name, content "
                 "FROM schema_embeddings "
-                "ORDER BY embedding <-> %s LIMIT %s",
+                "ORDER BY embedding <-> %s::vector LIMIT %s",
                 (vector, top_n),
             )
             rows = cur.fetchall()
