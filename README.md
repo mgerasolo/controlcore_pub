@@ -97,6 +97,12 @@ then talks to Ollama via `OLLAMA_URL` using the models defined by
 `OLLAMA_SQL_MODEL` and `OLLAMA_SUMMARY_MODEL`. Configure your front end to send
 chat requests to `SAURON_API_URL`.
 
+#### Logs
+
+General FastAPI activity is written to `sauron_api/logs/app.log`. AI prompts and
+responses are logged to `sauron_api/logs/chat.log` for troubleshooting
+conversations.
+
 ## Short Term Goals
 
 - Finish setting up basic AI SQL helper / research assistant / AI Chat Assistant

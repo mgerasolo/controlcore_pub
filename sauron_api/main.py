@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import os
+from pathlib import Path
 import psycopg2
 import httpx
 import re
@@ -24,7 +25,25 @@ from sauron_api.sql_utils import run_sql
 from shared.table_schema import collect_table_schema
 from shared.schema_introspect import list_public_tables
 
+
 load_environment()
+
+# Setup logging
+LOG_DIR = Path(__file__).resolve().parent / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    filename=LOG_DIR / "app.log",
+    filemode="a",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+
+chat_logger = logging.getLogger("chat")
+chat_handler = logging.FileHandler(LOG_DIR / "chat.log")
+chat_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+chat_logger.addHandler(chat_handler)
+chat_logger.setLevel(logging.INFO)
 
 app = FastAPI()
 
@@ -229,6 +248,7 @@ def retrieve_schema_context(question: str, top_n: int = 5) -> list[dict]:
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
+    chat_logger.info("Prompt: %s", req.question)
     schema = collect_table_schema(req.question)
 
     # Step 1: Rephrase and ask Gandalf to generate SQL
@@ -291,6 +311,8 @@ async def chat(req: ChatRequest):
         })
         final_resp.raise_for_status()
         data = final_resp.json()
+
+    chat_logger.info("Response: %s", json.dumps(data))
 
     return data
 
