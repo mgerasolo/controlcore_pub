@@ -72,7 +72,8 @@ def run_chat(monkeypatch, sql, question="what?", rephrased="clean", context=None
     resp = client.post('/chat', json={'question': question})
     assert resp.status_code == 200
     assert resp.json()['answer'] == 'hello'
-    assert captured['query'] == main.strip_fake_schemas(sql)
+    expected = main.strip_fake_schemas(main.clean_sql_block(sql))
+    assert captured['query'] == expected
     run_chat.last_retrieved = captured.get('retrieved')
     return captured['args']
 
@@ -163,3 +164,13 @@ def test_chat_rejects_unknown_table(monkeypatch):
     resp = client.post('/chat', json={'question': 'q'})
     assert resp.status_code == 400
     assert resp.json()['detail'].startswith('unknown table:')
+
+
+def test_clean_sql_block_markdown(monkeypatch):
+    sql = 'Here is the query:\n```sql\nSELECT * FROM controllers;\n```\nDone.'
+    run_chat(monkeypatch, sql)
+
+
+def test_clean_sql_block_with_prefix(monkeypatch):
+    sql = 'First do this. SELECT * FROM controllers; SELECT * FROM controller_health;'
+    run_chat(monkeypatch, sql)
