@@ -18,8 +18,17 @@ database prefix. The prompt explicitly mentions that the databases use PostgreSQ
 model emits that dialect. The example query in the prompt shows this style (`SELECT * FROM table LIMIT 5;`).
 
 In addition to the live introspection, richer descriptions, common aliases and
-example queries live in JSON files under `database_schemas/vector_embeddings`.
-Run `python scripts/load_schema_vectors.py` to encode these definitions and
+supplemental examples live in JSON files under `database_schemas/vector_embeddings`.
+Each table may provide `example_prompts` and `example_sql_queries`:
+
+```json
+"example_prompts": ["Show the latest soil moisture value."],
+"example_sql_queries": [
+  "SELECT value FROM sensor_data ORDER BY received_at DESC LIMIT 1;"
+]
+```
+
+Run `python scripts/load_schema_vectors.py` to encode these examples and
 populate the `schema_embeddings` table (requires the `pgvector` extension and
 database credentials via `CONTROLCORE_USER`/`CONTROLCORE_PW`). The `/chat`
 endpoint searches this table for snippets most similar to the user's question

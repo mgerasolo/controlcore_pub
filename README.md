@@ -150,9 +150,17 @@ CREATE TABLE schema_embeddings (
 
   - The SQL for this table is in `database_schemas/raw_dumps/schema_embeddings.sql` if you need to apply it manually.
 
-  - Edit the JSON definitions under `database_schemas/vector_embeddings/`.
+  - Edit the JSON definitions under `database_schemas/vector_embeddings/`. Each
+    table entry can include `example_prompts` and `example_sql_queries` to guide
+    Gandalf.
+    ```json
+    "example_prompts": ["Show the latest soil moisture value."],
+    "example_sql_queries": [
+      "SELECT value FROM sensor_data ORDER BY received_at DESC LIMIT 1;"
+    ]
+    ```
   - Run `python scripts/load_schema_vectors.py` afterwards to refresh the
-    `schema_embeddings` table.
+    `schema_embeddings` table. This command encodes the examples above.
     - The script reads `CONTROLCORE_USER`, `CONTROLCORE_PW`, `PG_HOST` and
       `PG_PORT` from your environment to connect to Postgres.
     - The `schema_embeddings` table requires the `pgvector` extension.
