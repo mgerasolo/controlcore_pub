@@ -7,13 +7,15 @@
       "description": "Live time-series readings from all field sensors, including soil moisture, temperature, and rain gauges.",
       "columns": {
         "station_id": "ID of the station where the sensor is located.",
-        "controller_id": "Controller that received the reading.",
-        "sensor_id": "Unique identifier for the sensor.",
-        "sensor_type": "Type of sensor (e.g., moisture, temp, rain_gauge).",
-        "value": "Sensor reading value (float).",
-        "unit": "Unit of the sensor reading, e.g., %, \u00b0C.",
-        "received_at": "Timestamp when the data was received.",
-        "location_id": "Mapped location ID from the locations table."
+        "controller_id": "Unique identifier of the microcontroller that reported the reading.",
+        "sensor_id": "Logical sensor name or alias used for querying and grouping (e.g., 'StationExt-SHT-1'). Often used with LIKE queries to retrieve sensor subsets.",
+        "sensor_type": "Sensor category such as temperature, humidity, water-flow, valve-state, light-intensity, etc.",
+        "source_id": "Globally unique identifier for the physical sensor source, constructed from system metadata (e.g., 'excessus-home_garden-hydrant_uno-r4-wifi-primary_temperature_StationExt-SHT-1'). Useful for precise identification and internal traceability.",
+        "pin": "Hardware pin on the controller used for input/output (if applicable).",
+        "value": "Sensor reading value (float or numeric).",
+        "unit": "Unit of the sensor reading, e.g., %, \u00b0C, L/min, %RH, PSI, or lux.",
+        "received_at": "Timestamp when the data was received. ex: 2025-07-09 04:07:31-04 ",
+        "location_id": "Geographic or logical grouping tag (e.g., 'excessus-home')."
       },
       "aliases": [
         "soil moisture",
@@ -26,9 +28,16 @@
         "Show the latest soil moisture value.",
         "What was the last rainfall amount?",
         "Get all temperature readings from the past 6 hours.",
-        "What value did the controller see for moisture yesterday?"
+        "What value did the controller see for moisture yesterday?",
+        "What is the latest reading from StationExt-SHT-1?",
+        "Show recent temperature values from SHT sensors.",
+        "Get the last water pressure measurement for BeetsTomatoes-Foush."
       ],
-      "example_sql_queries": []
+      "example_sql_queries": [
+        "SELECT sensor_id, value, unit FROM sensor_data WHERE sensor_type = 'temperature' AND sensor_id LIKE '%SHT%' ORDER BY received_at DESC LIMIT 3;",
+        "SELECT value FROM sensor_data WHERE unit = 'C' AND sensor_id = 'StationExt-SHT-1' ORDER BY received_at DESC LIMIT 1;",
+        "SELECT * FROM sensor_data WHERE source_id = 'excessus-home_garden-hydrant_uno-r4-wifi-primary_temperature_StationExt-SHT-1' ORDER BY received_at DESC LIMIT 1;"
+      ]
     },
     {
       "table": "control_log",
