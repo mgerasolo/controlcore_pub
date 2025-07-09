@@ -56,6 +56,7 @@ def build_sql_prompt(question: str, schema: str, context: list[dict] | None = No
         "User question:\n"
         f"{question} postgres\n\n"
         "Only return a valid SQL query. Do not explain it."
+        " Respond with the SQL statement only—no commentary, no Markdown fences."
     )
 
     return prompt
