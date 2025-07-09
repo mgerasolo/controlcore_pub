@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import httpx
 import os
+import json
 
 app = FastAPI()
 
@@ -13,6 +14,7 @@ OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 class SQLRequest(BaseModel):
     question: str
     schema: str
+    context: list[dict] | None = None
 
 class AnalyzeRequest(BaseModel):
     question: str
@@ -22,7 +24,7 @@ class AnalyzeRequest(BaseModel):
 class RephraseRequest(BaseModel):
     text: str
 
-def build_sql_prompt(question: str, schema: str) -> str:
+def build_sql_prompt(question: str, schema: str, context: list[dict] | None = None) -> str:
     """Return the prompt for the SQL‑generation model.
 
     The schema may be a markdown list of tables and columns.  Present it in a
@@ -34,11 +36,18 @@ def build_sql_prompt(question: str, schema: str) -> str:
     example = "SELECT * FROM table LIMIT 5;"
     formatted_schema = f"```json\n{schema}\n```"
 
-    return (
+    prompt = (
         "You are an AI assistant that generates SQL queries for weather and "
         "environmental databases. The databases use PostgreSQL syntax.\n\n"
-        f"Schema:\n{formatted_schema}\n\n"
-        "Each listed database is separate. Use table names directly without "
+        f"Schema:\n{formatted_schema}\n"
+    )
+
+    if context:
+        ctx_json = json.dumps(context, indent=2)
+        prompt += f"\nHints:\n```json\n{ctx_json}\n```"
+
+    prompt += (
+        "\n\nEach listed database is separate. Use table names directly without "
         "prefixing them with the database name.\n\n"
         "Example query using the schema above:\n"
         f"```sql\n{example}\n```\n\n"
@@ -48,6 +57,8 @@ def build_sql_prompt(question: str, schema: str) -> str:
         f"{question} postgres\n\n"
         "Only return a valid SQL query. Do not explain it."
     )
+
+    return prompt
 
 def build_summary_prompt(question: str, sql: str, rows: list[dict]) -> str:
     return f"""You are a Markdown report writer for a weather analytics system.
@@ -93,7 +104,7 @@ async def rephrase(req: RephraseRequest):
 
 @app.post("/generate-sql")
 async def generate_sql(req: SQLRequest):
-    prompt = build_sql_prompt(req.question, req.schema)
+    prompt = build_sql_prompt(req.question, req.schema, req.context)
     response = await call_ollama(prompt, model=SQL_MODEL)
     return {"sql": response}
 

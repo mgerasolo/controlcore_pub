@@ -15,3 +15,10 @@ def test_build_sql_prompt_includes_example_and_schema():
     assert 'show data' in prompt
     assert 'without prefixing' in prompt
     assert 'postgres' in prompt.lower()
+
+
+def test_build_sql_prompt_includes_context():
+    ctx = [{'table': 't', 'column': 'c', 'description': 'hint'}]
+    prompt = build_sql_prompt('q', '{}', ctx)
+    assert 'hint' in prompt
+    assert '```json' in prompt
