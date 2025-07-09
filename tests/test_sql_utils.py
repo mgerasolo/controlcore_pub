@@ -89,10 +89,11 @@ def test_run_sql_rejects_non_select():
 
     try:
         run_sql(conn, 'DELETE FROM users')
-    except ValueError:
-        pass
+    except HTTPException as e:
+        assert e.status_code == 400
+        assert 'DELETE FROM users' in e.detail
     else:
-        assert False, 'ValueError not raised'
+        assert False, 'HTTPException not raised'
     assert not cursor.executed
 
 
@@ -125,4 +126,19 @@ def test_run_sql_missing_table_returns_400():
         assert "does not exist" in e.detail
     else:
         assert False, "HTTPException not raised"
+
+
+def test_run_sql_error_message_contains_sql():
+    cursor = DummyCursor()
+    conn = DummyConn(cursor)
+    long_query = "DELETE FROM " + "x" * 110
+
+    try:
+        run_sql(conn, long_query)
+    except HTTPException as e:
+        assert e.status_code == 400
+        assert long_query[:100] in e.detail
+    else:
+        assert False, "HTTPException not raised"
+    assert not cursor.executed
 
