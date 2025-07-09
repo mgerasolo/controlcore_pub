@@ -50,19 +50,26 @@ def run_sql(conn, query: str) -> List[dict]:
     This performs very small safety checks to help avoid executing
     destructive statements.
     """
-    stripped = query.strip().lower()
-    if not (stripped.startswith("select") or stripped.startswith("with")):
-        raise ValueError("only SELECT queries are allowed")
-    if ";" in stripped[:-1]:
-        raise ValueError("multiple statements detected")
+    cleaned = query.strip()
+    stripped = cleaned.lower()
 
     try:
+        if not (stripped.startswith("select") or stripped.startswith("with")):
+            raise ValueError("only SELECT queries are allowed")
+        if ";" in stripped[:-1]:
+            raise ValueError("multiple statements detected")
+
         with conn.cursor() as cur:
             logging.info("Executing query: %s", query)
             cur.execute(query)
             description = getattr(cur, "description", None) or []
             colnames = [desc[0] for desc in description]
             rows = cur.fetchall()
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{e}: {cleaned[:100]}"
+        ) from e
     except psycopg2.Error as e:
         logging.error("SQL execution failed: %s", query)
         logging.exception(e)
