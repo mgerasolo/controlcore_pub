@@ -258,6 +258,11 @@ async def chat(req: ChatRequest):
         clean_q = rep_resp.json().get("text", req.question)
 
         context = retrieve_schema_context(clean_q)
+        chat_logger.info(
+            "Schema hints (%d): %s",
+            len(context),
+            ", ".join(h.get("table", "") for h in context),
+        )
 
         gen_resp = await client.post(
             GANDALF_SQL_URL,
@@ -284,6 +289,7 @@ async def chat(req: ChatRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
     logging.info("Stripped SQL: %s", sql)
+    chat_logger.info("Final SQL: %s", sql)
 
     # Step 2: Pick database connection
     dbname = detected or guess_db(req.question)
