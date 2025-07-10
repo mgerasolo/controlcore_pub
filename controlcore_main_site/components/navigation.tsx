@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Home, Activity, Brain, BarChart3, Settings, Droplets, Cloud, Calendar, Zap, TestTube } from "lucide-react"
+import { Home, Activity, Brain, BarChart3, Settings, Droplets, Cloud, Calendar, Zap, TestTube, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { User } from "@/lib/types"
 import { useEffect, useState } from "react"
@@ -18,6 +18,7 @@ const navigation = [
   { name: "Weather", href: "/weather", icon: Cloud },
   { name: "Schedule", href: "/schedule", icon: Calendar },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "About", href: "/about", icon: Info },
 ]
 
 export function Navigation() {
