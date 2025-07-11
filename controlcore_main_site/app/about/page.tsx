@@ -105,8 +105,7 @@ export default function AboutPage() {
                 Versatile Applications
               </CardTitle>
               <CardDescription className="text-base">
-                While our current testbed demonstrates precision irrigation
-                control, the underlying architecture is intentionally flexible.
+                Although our testbed currently focuses on precision irrigation, ControlCore is designed as a flexible control platform for diverse environments.
                 ControlCore is engineered to support a wide range of
                 applications:
               </CardDescription>
@@ -232,7 +231,7 @@ export default function AboutPage() {
                 <div className="mt-6">
                   <Button variant="outline" asChild>
                     <a
-                      href="https://wink-tomato-31906713.figma.site"
+                      href="https://flowdiagram.controlcore.kevinthoele.com"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2"

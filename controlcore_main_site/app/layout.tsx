@@ -10,7 +10,10 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "ControlCore Suite - Smart Agricultural Management",
   description: "Unified irrigation, environmental monitoring, and AI-powered agricultural control system",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/favicon_nodes_96x96.png',
+  },
 }
 
 export default function RootLayout({
