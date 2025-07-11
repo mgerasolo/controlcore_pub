@@ -70,12 +70,21 @@ export async function fetchDailySummary(limit = 20) {
 export async function fetchOverview(limit = 2) {
   const rowCount = Math.max(2, limit);
   const { rows } = await forePool.query(
-    `SELECT date,
-            weather_overview,
-            day
-       FROM overview_data
-      ORDER BY date DESC
-      LIMIT $1`,
+    `WITH ranked AS (
+       SELECT date,
+              weather_overview,
+              day,
+              ROW_NUMBER() OVER (PARTITION BY day ORDER BY last_updated DESC) AS rn
+         FROM overview_data
+        WHERE day IN (0, 1)
+    )
+    SELECT date,
+           weather_overview,
+           day
+      FROM ranked
+     WHERE rn = 1
+     ORDER BY day
+     LIMIT $1`,
     [rowCount],
   );
   return rows;
