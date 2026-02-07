@@ -2,117 +2,146 @@
 
 This document describes the preferred data formats for importing historical data into ControlCore.
 
----
-
-## Option 1: CSV Files (Recommended)
-
-CSV is the most portable and easiest to validate. One file per table.
-
-### Weather Data: `daily_summary_data.csv`
-
-```csv
-location_name,date,temperature_min,temperature_max,temperature_afternoon,precipitation_total,humidity_afternoon,wind_max_speed,wind_max_direction
-Fincastle,2024-01-15,28.5,45.2,42.1,0.12,65,12.5,225
-Fincastle,2024-01-16,32.1,48.7,45.3,0.00,58,8.2,180
-Roanoke,2024-01-15,30.2,47.8,44.5,0.08,62,15.1,210
-```
-
-**Columns:**
-| Column | Type | Required | Description |
-|--------|------|----------|-------------|
-| location_name | text | yes | Location name (we'll map to location_id) |
-| date | date | yes | YYYY-MM-DD format |
-| temperature_min | float | no | Daily minimum temperature (°F) |
-| temperature_max | float | no | Daily maximum temperature (°F) |
-| temperature_afternoon | float | no | Afternoon temperature (°F) |
-| precipitation_total | float | no | Total precipitation (inches) |
-| humidity_afternoon | float | no | Afternoon humidity (%) |
-| wind_max_speed | float | no | Max wind speed (mph) |
-| wind_max_direction | float | no | Wind direction (degrees) |
-
-### Locations: `locations.csv`
-
-```csv
-id,name,latitude,longitude,description
-1,Fincastle,37.4993,-79.877,Main garden location
-2,Rome,34.257,-85.165,Secondary site
-3,Roanoke,37.271,-79.9414,Weather station
-```
-
-### Sensor Readings (if available): `sensor_readings.csv`
-
-```csv
-node_name,capability,timestamp,value,unit
-potato-patch-moisture,soil_moisture,2024-01-15T14:30:00Z,45.2,%
-potato-patch-moisture,soil_temperature,2024-01-15T14:30:00Z,52.1,°F
-main-valve,flow_rate,2024-01-15T14:30:00Z,2.5,gpm
-```
-
-### Node Registry (if available): `nodes.csv`
-
-```csv
-uuid,friendly_name,node_type,hardware_type,location,description
-550e8400-e29b-41d4-a716-446655440001,Potato Patch Sensor,hybrid,esp32,Garden Zone A,Moisture and temp sensor with valve
-550e8400-e29b-41d4-a716-446655440002,Main Valve Controller,actuator,arduino,Pump House,Controls main irrigation valve
-```
+Since Kevin's source database is PostgreSQL (the original ControlCore), we can use direct PostgreSQL exports.
 
 ---
 
-## Option 2: PostgreSQL Dump
+## Option 1: PostgreSQL Dump (Recommended)
 
-If already using PostgreSQL, a dump is fastest:
+Since Kevin's database uses the same schema as ControlCore, the fastest approach is a pg_dump:
 
 ```bash
-# Export specific tables
-pg_dump -h localhost -U username -d database_name \
+# Connect to your PostgreSQL database
+psql -h localhost -U sauron -d your_database
+
+# Export all weather data tables (data only, no schema)
+pg_dump -h localhost -U sauron -d your_database \
   --table=daily_summary_data \
+  --table=hourly_data \
+  --table=fincastle_daily \
+  --table=fincastle_hourly \
+  --table=rome_daily \
+  --table=rome_hourly \
   --table=locations \
-  --table=sensor_readings \
   --data-only \
   --format=plain \
-  -f export.sql
+  -f controlcore_data_export.sql
+```
 
-# Or CSV export from psql
-\copy daily_summary_data TO 'daily_summary_data.csv' WITH CSV HEADER;
+This will give us the exact data with location_id references preserved.
+
+---
+
+## Option 2: CSV Exports (Alternative)
+
+If you prefer CSV, run these from within `psql`:
+
+```sql
+-- Connect first
+psql -h localhost -U sauron -d your_database
+
+-- Export each table to CSV
 \copy locations TO 'locations.csv' WITH CSV HEADER;
+\copy daily_summary_data TO 'daily_summary_data.csv' WITH CSV HEADER;
+\copy hourly_data TO 'hourly_data.csv' WITH CSV HEADER;
+\copy fincastle_daily TO 'fincastle_daily.csv' WITH CSV HEADER;
+\copy fincastle_hourly TO 'fincastle_hourly.csv' WITH CSV HEADER;
+\copy rome_daily TO 'rome_daily.csv' WITH CSV HEADER;
+\copy rome_hourly TO 'rome_hourly.csv' WITH CSV HEADER;
 ```
 
 ---
 
-## Option 3: JSON Lines (JSONL)
+## Kevin's Exact Table Schemas
 
-One JSON object per line. Good for nested/complex data.
+Based on `openweather_historical.sql`, here are the table structures:
 
-### `daily_weather.jsonl`
-```json
-{"location": "Fincastle", "date": "2024-01-15", "temp": {"min": 28.5, "max": 45.2}, "precip": 0.12}
-{"location": "Fincastle", "date": "2024-01-16", "temp": {"min": 32.1, "max": 48.7}, "precip": 0.00}
-```
+### `daily_summary_data` (Main weather data)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | integer | Primary key |
+| lat | numeric(10,6) | Latitude |
+| lon | numeric(10,6) | Longitude |
+| tzoff | integer | Timezone offset |
+| date | integer | **Unix timestamp** (not date!) |
+| units | text | Unit system used |
+| cloud_cover_afternoon | integer | Cloud cover % |
+| humidity_afternoon | integer | Humidity % |
+| precipitation_total | real | Total precipitation |
+| temperature_min | real | Daily min temp |
+| temperature_max | real | Daily max temp |
+| temperature_afternoon | real | Afternoon temp |
+| temperature_night | real | Night temp |
+| temperature_evening | real | Evening temp |
+| temperature_morning | real | Morning temp |
+| pressure_afternoon | integer | Atmospheric pressure |
+| wind_max_speed | real | Max wind speed |
+| wind_max_direction | integer | Wind direction (degrees) |
+| location_id | integer | FK to locations |
 
-### `sensor_readings.jsonl`
-```json
-{"node": "potato-patch", "sensor": "moisture", "ts": "2024-01-15T14:30:00Z", "value": 45.2, "unit": "%"}
-{"node": "potato-patch", "sensor": "temperature", "ts": "2024-01-15T14:30:00Z", "value": 52.1, "unit": "F"}
-```
+### `hourly_data` (Detailed hourly readings)
+| Column | Type | Description |
+|--------|------|-------------|
+| id | integer | Primary key |
+| dt | integer | Unix timestamp |
+| lat, lon | numeric(10,6) | Coordinates |
+| tz | text | Timezone name |
+| tzoff | integer | Timezone offset |
+| sunrise, sunset | integer | Unix timestamps |
+| temp | real | Temperature |
+| feels_like | real | "Feels like" temp |
+| pressure | integer | Atmospheric pressure |
+| humidity | integer | Humidity % |
+| dew_point | real | Dew point |
+| vis | real | Visibility |
+| description | text | Weather description |
+| clouds | integer | Cloud cover |
+| wind_speed | real | Wind speed |
+| wind_deg | integer | Wind direction |
+| location_id | integer | FK to locations |
+
+### `locations`
+| Column | Type | Description |
+|--------|------|-------------|
+| id | integer | Primary key |
+| friendly_name | text | Display name (Fincastle, Rome, etc.) |
+| official_station_name | text | Weather station name |
+| lat_detail | double precision | Precise latitude |
+| lon_detail | double precision | Precise longitude |
+| lat_rounded, lon_rounded | real | Rounded coordinates |
+| zip_code | text | ZIP code |
+| controlcore_location_id | text | ControlCore reference |
+
+### Location-specific tables
+- `fincastle_daily`, `rome_daily` - Same structure as `daily_summary_data`
+- `fincastle_hourly`, `rome_hourly` - Same structure as `hourly_data`
 
 ---
 
-## Data We're Most Interested In
+## Important Notes
+
+1. **Date format**: The `date` column is a **Unix timestamp** (integer seconds since epoch), not a date string
+2. **Location-specific tables**: These appear to be partitioned copies; we can import either the main tables or location-specific ones
+3. **Utility functions**: The export includes `celsius_to_fahrenheit()` and `extract_date()` which we can use
+4. **Foreign keys**: All tables reference `locations.id`
+
+---
+
+## Data We Need
 
 **Priority 1 - Weather Data:**
-- Daily summaries (temp min/max, precipitation, humidity, wind)
-- Date range covered
-- Locations with coordinates
+- `locations` - Location definitions (required first for FK references)
+- `daily_summary_data` - Daily weather summaries
+- `hourly_data` - Detailed hourly readings (optional, larger dataset)
 
-**Priority 2 - Sensor Readings (if available):**
-- Historical sensor data from any IoT nodes
-- Timestamps and values
-- What sensors/capabilities exist
+**Priority 2 - Location-Specific Tables (if used):**
+- `fincastle_daily`, `fincastle_hourly`
+- `rome_daily`, `rome_hourly`
 
-**Priority 3 - Node Configuration (if available):**
-- What nodes exist
-- What sensors/actions each has
-- UUID mappings
+**Priority 3 - Future IoT Data (Phase 2+):**
+- Sensor readings from ESP32/Arduino nodes
+- Node configurations
+- Historical action logs
 
 ---
 
@@ -120,32 +149,68 @@ One JSON object per line. Good for nested/complex data.
 
 Once we receive the data, we'll:
 
-1. Validate CSV structure
-2. Map location names to location_ids (or create new locations)
-3. Bulk import using PostgreSQL COPY:
+1. Import `locations` first (provides FK references)
+2. Import weather tables (`daily_summary_data`, `hourly_data`)
+3. Verify row counts and date ranges:
    ```sql
-   COPY daily_summary_data FROM 'daily_summary_data.csv' WITH CSV HEADER;
+   SELECT COUNT(*),
+          TO_TIMESTAMP(MIN(date)) as earliest,
+          TO_TIMESTAMP(MAX(date)) as latest
+   FROM daily_summary_data;
    ```
-4. Verify row counts and date ranges
-5. Update schema embeddings if new columns/tables
+4. Update schema embeddings for the Text-to-SQL pipeline
 
 ---
 
-## Questions for Kevin
+## Quick Data Check Commands
 
-1. **Date range:** What's the earliest and latest date in your data?
-2. **Locations:** Which locations have data? (Fincastle, Rome, others?)
-3. **Data source:** Is this from OpenWeather API, local sensors, or both?
-4. **Sensor data:** Do you have historical readings from ESP32/Arduino nodes?
-5. **Database:** Are you using PostgreSQL, SQLite, or something else?
+Run these in your database to see what you have:
+
+```sql
+-- Check locations
+SELECT id, friendly_name, lat_detail, lon_detail FROM locations;
+
+-- Check date range for daily data
+SELECT location_id, COUNT(*) as records,
+       TO_TIMESTAMP(MIN(date)) as earliest,
+       TO_TIMESTAMP(MAX(date)) as latest
+FROM daily_summary_data
+GROUP BY location_id;
+
+-- Check hourly data volume
+SELECT location_id, COUNT(*) as records
+FROM hourly_data
+GROUP BY location_id;
+
+-- Total size estimate
+SELECT pg_size_pretty(pg_total_relation_size('daily_summary_data')) as daily_size,
+       pg_size_pretty(pg_total_relation_size('hourly_data')) as hourly_size;
+```
 
 ---
 
-## File Transfer
+## File Transfer Options
 
-Options for getting files to us:
-- **GitHub:** Add to a branch or create a data release
-- **Direct:** Email/share CSV files (if small)
-- **S3/Cloud:** Upload to shared bucket
+1. **GitHub Release** (recommended for versioned data):
+   - Create a release on your repo
+   - Attach the SQL dump or compressed CSVs
 
-For large datasets (>100MB), a PostgreSQL dump or compressed CSV is preferred.
+2. **Direct Share**:
+   - For smaller exports (<50MB), email or cloud share works
+
+3. **Compressed Transfer**:
+   ```bash
+   # Compress the export
+   gzip controlcore_data_export.sql
+   # Result: controlcore_data_export.sql.gz
+   ```
+
+---
+
+## Questions Answered
+
+Based on the schema dump:
+- **Database:** PostgreSQL (v17.5)
+- **Locations:** Fincastle, Rome (location-specific tables exist)
+- **Data source:** OpenWeather API (table names confirm this)
+- **Date format:** Unix timestamps (integer), not date strings

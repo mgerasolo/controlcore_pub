@@ -3,11 +3,10 @@ Sauron API - Simplified standalone version for Middle Earth Forecaster
 
 Orchestrates the Text-to-SQL pipeline:
 1. Receive user question
-2. Find relevant schema context via vector search
-3. Call Gandalf to generate SQL
-4. Execute SQL
-5. Call Gandalf to summarize results
-6. Return natural language response
+2. Parse intent (query vs action vs control)
+3. For queries: Generate SQL, execute, summarize
+4. For actions: Route to MQTT and execute on IoT nodes
+5. Return natural language response
 """
 
 from fastapi import FastAPI, HTTPException
@@ -20,8 +19,14 @@ import json
 import datetime
 import logging
 import re
+from typing import Optional
 from sentence_transformers import SentenceTransformer
 from pgvector.psycopg2 import register_vector
+
+# Local imports
+from .command_parser import CommandParser, IntentType, ActionType, ParsedCommand, create_command_parser
+from .mqtt_service import MQTTService, MQTTConfig, create_mqtt_service
+from .safety_engine import SafetyEngine, SafetyDecision, SafetyContext, create_safety_engine
 
 # Load environment
 from dotenv import load_dotenv
@@ -56,6 +61,43 @@ GANDALF_REPHRASE_URL = os.getenv("GANDALF_REPHRASE_URL", "http://10.0.0.33:3354/
 # Schema embedding model (same as ControlCore)
 SCHEMA_MODEL_NAME = "all-mpnet-base-v2"
 _schema_model = None
+
+# Command parser, MQTT service, and safety engine (lazy-loaded)
+_command_parser: Optional[CommandParser] = None
+_mqtt_service: Optional[MQTTService] = None
+_safety_engine: Optional[SafetyEngine] = None
+
+
+def get_command_parser() -> CommandParser:
+    """Lazy-load the command parser."""
+    global _command_parser
+    if _command_parser is None:
+        logger.info("Initializing command parser...")
+        _command_parser = create_command_parser(use_llm=True)
+    return _command_parser
+
+
+def get_mqtt_service() -> Optional[MQTTService]:
+    """Lazy-load the MQTT service."""
+    global _mqtt_service
+    if _mqtt_service is None:
+        mqtt_host = os.getenv("MQTT_HOST")
+        if mqtt_host:
+            logger.info(f"Initializing MQTT service to {mqtt_host}...")
+            _mqtt_service = create_mqtt_service()
+            _mqtt_service.connect()
+        else:
+            logger.warning("MQTT_HOST not set, MQTT service disabled")
+    return _mqtt_service
+
+
+def get_safety_engine() -> SafetyEngine:
+    """Lazy-load the safety engine."""
+    global _safety_engine
+    if _safety_engine is None:
+        logger.info("Initializing safety engine...")
+        _safety_engine = create_safety_engine()
+    return _safety_engine
 
 
 class ChatRequest(BaseModel):
@@ -318,11 +360,218 @@ async def health():
     return {"status": "healthy", "service": "sauron"}
 
 
+async def handle_action_command(parsed: ParsedCommand) -> ChatResponse:
+    """Handle action commands (controlling devices)."""
+    mqtt = get_mqtt_service()
+    safety = get_safety_engine()
+
+    if not mqtt or not mqtt.connected:
+        return ChatResponse(
+            summary="Cannot execute action: MQTT service is not connected. IoT control is currently unavailable.",
+            sql=None,
+            row_count=None,
+            metadata=None
+        )
+
+    # Resolve target node
+    target = parsed.target_node
+    if not target:
+        return ChatResponse(
+            summary="I couldn't determine which device you want to control. Please specify a device name.",
+            sql=None,
+            row_count=None,
+            metadata=None
+        )
+
+    # Build action command
+    action = f"{parsed.capability}_{parsed.action_type.value}" if parsed.capability else parsed.action_type.value
+    params = parsed.parameters.copy()
+
+    # SAFETY CHECK - All AI actions must pass safety rules
+    safety_result = safety.check_action(
+        action=action,
+        parameters=params,
+        initiated_by="ai"
+    )
+
+    # Handle safety decision
+    if safety_result.decision == SafetyDecision.DENIED:
+        logger.warning(f"Action DENIED by safety: {safety_result.reason}")
+        return ChatResponse(
+            summary=f"Action blocked by safety rule: {safety_result.reason}\n\n"
+                   f"Rule: {safety_result.rule_name}",
+            sql=None,
+            row_count=None,
+            metadata=QueryMetadata(location=target)
+        )
+
+    if safety_result.decision == SafetyDecision.REQUIRES_CONFIRMATION:
+        return ChatResponse(
+            summary=f"This action requires human confirmation: {safety_result.reason}\n\n"
+                   f"Please confirm you want to proceed with: {action} on {target}",
+            sql=None,
+            row_count=None,
+            metadata=QueryMetadata(location=target)
+        )
+
+    # Apply modifications if safety engine adjusted parameters
+    if safety_result.decision == SafetyDecision.MODIFIED and safety_result.modified_params:
+        logger.info(f"Action modified by safety: {params} -> {safety_result.modified_params}")
+        params = safety_result.modified_params
+
+    # Log the action (will be stored in action_log table)
+    conn = get_db_connection()
+    action_id = None
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO action_log
+                (initiated_by, initiator_id, action, parameters, original_request,
+                 safety_check_result, safety_notes, execution_status)
+                VALUES ('ai', 'sauron', %s, %s, %s, %s, %s, 'pending')
+                RETURNING id
+            """, (action, json.dumps(params), parsed.original_text,
+                  safety_result.decision.value, safety_result.reason))
+            action_id = cur.fetchone()[0]
+            conn.commit()
+    except Exception as e:
+        logger.error(f"Failed to log action: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
+    # Send command via MQTT
+    node_uuid = mqtt.get_node_status(target)
+    if not node_uuid:
+        # Try by friendly name
+        node_uuid = target  # For now, use target as-is
+
+    success = mqtt.send_command(
+        node_uuid=node_uuid if isinstance(node_uuid, str) else target,
+        action=action,
+        parameters=params,
+        action_id=action_id
+    )
+
+    if success:
+        # Build response
+        action_desc = f"{'turning on' if parsed.action_type == ActionType.ON else 'turning off'}" if parsed.action_type in (ActionType.ON, ActionType.OFF) else f"setting"
+        duration_msg = f" for {params.get('duration_minutes')} minutes" if 'duration_minutes' in params else ""
+        value_msg = f" to {params.get('value')}" if 'value' in params else ""
+
+        summary = f"Command sent: {action_desc} {target}{value_msg}{duration_msg}. Waiting for node confirmation."
+
+        # Add safety modification note if applicable
+        if safety_result.decision == SafetyDecision.MODIFIED:
+            summary += f"\n\n*Note: Parameters adjusted by safety rule - {safety_result.reason}*"
+    else:
+        summary = f"Failed to send command to {target}. The node may be offline."
+
+    return ChatResponse(
+        summary=summary,
+        sql=None,
+        row_count=None,
+        metadata=QueryMetadata(location=target)
+    )
+
+
+async def handle_control_command(parsed: ParsedCommand) -> ChatResponse:
+    """Handle control commands (system-level operations)."""
+    mqtt = get_mqtt_service()
+
+    if parsed.control_type == "e_stop":
+        if mqtt and mqtt.connected:
+            mqtt.send_emergency_stop(
+                level=parsed.scope or "all",
+                reason=parsed.original_text
+            )
+            return ChatResponse(
+                summary="EMERGENCY STOP activated! All nodes have been commanded to halt operations.",
+                sql=None,
+                row_count=None,
+                metadata=None
+            )
+        else:
+            return ChatResponse(
+                summary="EMERGENCY STOP requested but MQTT is not connected. Manual intervention may be required!",
+                sql=None,
+                row_count=None,
+                metadata=None
+            )
+
+    elif parsed.control_type == "list_nodes":
+        if mqtt:
+            nodes = mqtt.get_all_nodes()
+            if nodes:
+                node_list = "\n".join([f"- {n['friendly_name']} ({n['status']})" for n in nodes])
+                return ChatResponse(
+                    summary=f"Registered nodes:\n{node_list}",
+                    sql=None,
+                    row_count=len(nodes),
+                    metadata=None
+                )
+            else:
+                return ChatResponse(
+                    summary="No nodes are currently registered in the system.",
+                    sql=None,
+                    row_count=0,
+                    metadata=None
+                )
+        return ChatResponse(
+            summary="Node listing unavailable: MQTT service not connected.",
+            sql=None,
+            row_count=None,
+            metadata=None
+        )
+
+    elif parsed.control_type == "status":
+        if mqtt and parsed.target_node:
+            status = mqtt.get_node_status(parsed.target_node)
+            if status:
+                return ChatResponse(
+                    summary=f"Node {status['friendly_name']}: {status['status']}\n"
+                           f"Last seen: {status.get('last_seen', 'unknown')}\n"
+                           f"Battery: {status.get('battery_voltage', 'N/A')}V\n"
+                           f"Firmware: {status.get('firmware_version', 'unknown')}",
+                    sql=None,
+                    row_count=None,
+                    metadata=None
+                )
+        return ChatResponse(
+            summary=f"Could not find status for node: {parsed.target_node}",
+            sql=None,
+            row_count=None,
+            metadata=None
+        )
+
+    return ChatResponse(
+        summary=f"Control command '{parsed.control_type}' acknowledged but not yet implemented.",
+        sql=None,
+        row_count=None,
+        metadata=None
+    )
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     """Main chat endpoint - orchestrates the Text-to-SQL pipeline."""
 
     logger.info(f"Question: {req.question}")
+
+    # Step 0: Parse intent to determine routing
+    parser = get_command_parser()
+    parsed = parser.parse(req.question)
+
+    logger.info(f"Parsed intent: {parsed.intent.value} (confidence: {parsed.confidence:.2f})")
+
+    # Route based on intent
+    if parsed.intent == IntentType.ACTION and parsed.confidence >= 0.7:
+        return await handle_action_command(parsed)
+
+    if parsed.intent == IntentType.CONTROL and parsed.confidence >= 0.7:
+        return await handle_control_command(parsed)
+
+    # Default: treat as query (weather/data question)
 
     # Step 1: Get schema context via vector search
     context = retrieve_schema_context(req.question)

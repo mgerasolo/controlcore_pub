@@ -34,9 +34,18 @@ User → Open WebUI → Sauron API → Gandalf API → LiteLLM
 
 ---
 
-## Phase 2: Command & Control Layer
+## Phase 2: Command & Control Layer ✅ COMPLETE
 
 **Goal:** Enable natural language commands to IoT nodes with safety validation.
+
+**Delivered:**
+- MQTT client integration (paho-mqtt) in Sauron
+- Node registry tables (nodes, node_capabilities, sensor_readings, action_log)
+- Mosquitto broker with persistence and WebSocket support
+- Hybrid command parser (pattern-based + LLM fallback)
+- Safety rule engine with built-in critical rules
+- Action audit logging with AI reasoning capture
+- E-stop messaging via MQTT
 
 **Core Components:**
 
@@ -272,18 +281,17 @@ class KnowledgeManager:
 
 ## Next Steps
 
-**Immediate (Phase 2 foundation):**
-1. Add MQTT client to Sauron
-2. Create node registry tables
-3. Implement basic command parser
-4. Add action audit logging
+**Immediate (Phase 3 - Offline-First):**
+1. ~~Add MQTT client to Sauron~~ ✅
+2. ~~Create node registry tables~~ ✅
+3. ~~Implement command parser~~ ✅
+4. ~~Add safety rule engine~~ ✅
+5. ~~Add action audit logging~~ ✅
+6. Add local LLM fallback (Ollama on Central Node)
+7. Implement static fallback rules
+8. Add E-stop messaging broadcast
 
-**Medium-term:**
-5. Safety rule engine
-6. Offline detection and fallback
-7. E-stop messaging
-
-**Long-term:**
-8. Learning and adaptation
-9. Domain knowledge loading
-10. Outcome feedback integration
+**Medium-term (Phase 4):**
+9. Learning and adaptation
+10. Domain knowledge loading
+11. Outcome feedback integration

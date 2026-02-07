@@ -183,6 +183,68 @@ git merge upstream/main
 
 ---
 
+## Phase 2: Command & Control Layer
+
+**Date:** February 6, 2026
+
+### New Files Added
+
+#### IoT Control Layer
+| File | Purpose |
+|------|---------|
+| `sauron_api/mqtt_service.py` | MQTT client for IoT node communication |
+| `sauron_api/command_parser.py` | Natural language → structured command parser |
+| `sauron_api/safety_engine.py` | Safety rule engine with critical built-in rules |
+| `mosquitto.conf` | MQTT broker configuration |
+| `database_schemas/node_registry.sql` | Node registry, capabilities, sensor readings, action log tables |
+| `docs/DATA_IMPORT_SPEC.md` | Data import specification with Kevin's exact PostgreSQL schema |
+
+### MQTT Architecture
+```
+User → Sauron (MQTT Client) → Mosquitto (Broker) → SA Nodes (ESP32/Arduino)
+                                    ↓
+                          PostgreSQL (action_log, sensor_readings)
+```
+
+### Command Parser
+- Pattern-based parsing for common commands (instant, no API)
+- LLM fallback for complex/ambiguous commands
+- Confidence threshold (0.7) triggers LLM fallback
+- Supports: ON/OFF, SET value, timed actions, schedules, E-stop
+
+### Safety Engine
+Built-in critical rules (cannot be disabled):
+1. **No watering during freeze** - Blocks irrigation when frost_warning=true
+2. **Max 60 min single watering** - Adjusts duration if exceeded
+3. **Max 180 min daily watering** - Blocks when daily limit reached
+4. **Temperature limits** - 40-90°F enforced
+5. **No irrigation during high wind** - Blocks sprinkler operations
+
+Safety decisions: APPROVED, DENIED, MODIFIED, REQUIRES_CONFIRMATION
+
+### Action Audit Logging
+All AI-initiated actions logged with:
+- Original user request
+- Parsed action and parameters
+- Safety check result and reasoning
+- Execution status (pending → sent → confirmed/failed)
+- Timestamp and initiator
+
+### Environment Variables Added
+```bash
+# MQTT configuration
+MQTT_HOST=mqtt
+MQTT_PORT=1883
+MQTT_TOPIC=controlcore/#
+```
+
+### Deployment Changes
+- Added Mosquitto container to docker-compose.openwebui.yml
+- Ports: 1883 (MQTT), 9001 (WebSocket)
+- Persistent storage for messages and logs
+
+---
+
 ## Questions or Feedback
 
 Feel free to open an issue or reach out if you have questions about these changes!
