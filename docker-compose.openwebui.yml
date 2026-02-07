@@ -19,6 +19,9 @@ services:
       - ENABLE_LOGIN_FORM=true
     volumes:
       - openwebui-data:/app/backend/data
+      # Mount custom icons for branding
+      - ./icons/icons8-gandalf-96.png:/app/backend/static/assets/images/logo.png:ro
+      - ./icons/icons8-gandalf-96.png:/app/backend/static/favicon.png:ro
     depends_on:
       - sauron
     restart: unless-stopped
