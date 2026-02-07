@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  gandalf:
+    build:
+      context: .
+      dockerfile: Dockerfile.gandalf
+    container_name: forecaster-gandalf
+    ports:
+      - "3354:3354"
+    environment:
+      - LITELLM_API_URL=http://10.0.0.27:2764/v1
+      - LITELLM_API_KEY=${LITELLM_API_KEY:-sk-21cFr6t5HDbW-KxJY8NbWg}
+      - LITELLM_SQL_MODEL=jarvis-sqlcoder
+      - LITELLM_SUMMARY_MODEL=jarvis-llama31
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3354/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sauron:
+    build:
+      context: .
+      dockerfile: Dockerfile.sauron
+    container_name: forecaster-sauron
+    ports:
+      - "3352:3352"
+    environment:
+      - PG_HOST=10.0.0.33
+      - PG_PORT=3353
+      - PG_USER=forecaster
+      - PG_PASSWORD=${PG_PASSWORD:-sFYBPpjxqkizSuASKpcK8U8r}
+      - GANDALF_SQL_URL=http://gandalf:3354/generate-sql
+      - GANDALF_ANALYZE_URL=http://gandalf:3354/analyze
+      - GANDALF_REPHRASE_URL=http://gandalf:3354/rephrase
+    depends_on:
+      - gandalf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3352/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  default:
+    name: forecaster-network

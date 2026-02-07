@@ -41,3 +41,7 @@ controlcore_ai/logs/*.log
 
 sauron_api/logs/*
 !sauron_api/logs/.gitkeep
+
+# Virtual environments
+venv/
+.venv/

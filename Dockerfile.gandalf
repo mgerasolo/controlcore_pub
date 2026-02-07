@@ -1,0 +1,21 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    httpx \
+    openai \
+    pydantic \
+    python-dotenv
+
+# Copy the Gandalf API
+COPY gandalf_api/sql_query_handler_litellm.py /app/main.py
+
+# Expose port
+EXPOSE 3354
+
+# Run the API
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3354"]
