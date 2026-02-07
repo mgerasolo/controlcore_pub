@@ -44,8 +44,13 @@ services:
       - GANDALF_SQL_URL=http://gandalf:3354/generate-sql
       - GANDALF_ANALYZE_URL=http://gandalf:3354/analyze
       - GANDALF_REPHRASE_URL=http://gandalf:3354/rephrase
+      # MQTT configuration
+      - MQTT_HOST=mqtt
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=controlcore/#
     depends_on:
       - gandalf
+      - mqtt
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3352/health"]
@@ -72,8 +77,28 @@ services:
       timeout: 10s
       retries: 3
 
+  # MQTT Broker - Message hub for IoT nodes
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: forecaster-mqtt
+    ports:
+      - "1883:1883"    # MQTT standard port
+      - "9001:9001"    # WebSocket port (for web clients)
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   openwebui-data:
+  mosquitto-data:
+  mosquitto-log:
 
 networks:
   default:
